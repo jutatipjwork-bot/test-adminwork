@@ -1,0 +1,2719 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Back Office Studio — ระบบหลังบ้านจัดการออเดอร์</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-canvas: linear-gradient(135deg, #fdf6ef 0%, #fce8ec 48%, #faece1 100%);
+      --bg-blob-1: rgba(247, 178, 189, 0.34);
+      --bg-blob-2: rgba(251, 194, 152, 0.32);
+      --surface-card: rgba(255, 255, 255, 0.86);
+      --surface-sidebar: rgba(252, 246, 240, 0.92);
+      --surface-muted: rgba(248, 238, 231, 0.78);
+      --text-main: #231d1b;
+      --text-muted: #6e615b;
+      --accent-primary: #d96b88;
+      --accent-secondary: #e89968;
+      --accent-dark: #1f1918;
+      --border-soft: rgba(66, 48, 42, 0.10);
+      --font-family-main: 'Prompt', 'Noto Sans Thai', sans-serif;
+      --font-scale: 15px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: var(--font-scale);
+      transition: font-size 0.2s ease;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-family-main);
+      font-size: 1rem;
+      color: var(--text-main);
+      background: var(--bg-canvas);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background 0.35s ease, color 0.25s ease;
+    }
+
+    .editorial-bg-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .blob-orb-1 {
+      position: absolute;
+      width: 44vw;
+      height: 44vw;
+      min-width: 280px;
+      min-height: 280px;
+      top: -10vw;
+      right: -8vw;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, var(--bg-blob-1), transparent 72%);
+      filter: blur(42px);
+      transition: background 0.4s ease;
+    }
+
+    .blob-orb-2 {
+      position: absolute;
+      width: 48vw;
+      height: 48vw;
+      min-width: 300px;
+      min-height: 300px;
+      bottom: -14vw;
+      left: 12vw;
+      border-radius: 50%;
+      background: radial-gradient(circle at 60% 60%, var(--bg-blob-2), transparent 72%);
+      filter: blur(48px);
+      transition: background 0.4s ease;
+    }
+
+    .glass-panel {
+      background: var(--surface-card);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border-soft);
+      border-radius: 22px;
+      box-shadow: 0 10px 30px -12px rgba(42, 26, 20, 0.08);
+    }
+
+    .sidebar-panel {
+      background: var(--surface-sidebar);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-right: 1px solid var(--border-soft);
+    }
+
+    .muted-surface {
+      background: var(--surface-muted);
+      border: 1px solid var(--border-soft);
+      border-radius: 18px;
+    }
+
+    .btn-accent {
+      background: var(--accent-dark);
+      color: #ffffff;
+      transition: transform 0.15s ease, opacity 0.2s ease, background 0.25s ease;
+    }
+
+    .btn-accent:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+
+    .btn-soft {
+      background: rgba(255, 255, 255, 0.80);
+      border: 1px solid var(--border-soft);
+      color: var(--text-main);
+      transition: all 0.18s ease;
+    }
+
+    .btn-soft:hover {
+      background: #ffffff;
+      border-color: rgba(42, 26, 20, 0.22);
+    }
+
+    .custom-scroll::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.03);
+      border-radius: 999px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(66, 48, 42, 0.18);
+      border-radius: 999px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(66, 48, 42, 0.30);
+    }
+
+    @keyframes alertPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(225, 63, 94, 0.35); }
+      50% { box-shadow: 0 0 0 7px rgba(225, 63, 94, 0); }
+    }
+
+    .due-alert-card {
+      border: 1.5px solid #e13f5e !important;
+      background: linear-gradient(160deg, #fff8f9 0%, #ffeef2 100%) !important;
+      animation: alertPulse 2.2s infinite;
+    }
+
+    .drag-over-col {
+      outline: 2px dashed var(--accent-primary);
+      outline-offset: -3px;
+      background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    .drag-over-card {
+      border-top: 3px solid var(--accent-primary) !important;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-pink-200 selection:text-stone-900">
+  <!-- Decorative soft gradient & blob background layer -->
+  <div id="bgLayer" class="editorial-bg-layer">
+    <div id="blob1" class="blob-orb-1"></div>
+    <div id="blob2" class="blob-orb-2"></div>
+  </div>
+
+  <!-- Toast Alert Container -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-3 sm:px-0"></div>
+
+  <!-- Mobile Drawer Backdrop -->
+  <div id="mobileBackdrop" onclick="toggleMobileSidebar(false)" class="fixed inset-0 bg-stone-900/35 backdrop-blur-xs z-30 hidden lg:hidden"></div>
+
+  <div class="relative z-10 min-h-screen flex flex-col lg:flex-row">
+    <!-- Left Sidebar -->
+    <aside id="sidebar" class="sidebar-panel fixed lg:sticky top-0 left-0 z-40 h-screen w-72 shrink-0 flex flex-col justify-between p-5 transition-transform duration-250 -translate-x-full lg:translate-x-0 custom-scroll overflow-y-auto">
+      <div>
+        <!-- Brand Header -->
+        <div class="flex items-center justify-between gap-2 pb-5 border-b border-stone-800/10">
+          <div class="flex items-center gap-3">
+            <div id="brandBadge" class="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-semibold shadow-sm" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));">
+              BO
+            </div>
+            <div>
+              <h1 class="font-bold text-base tracking-tight leading-tight">BackOffice Studio</h1>
+              <p class="text-[11px] opacity-65">Admin Order & Sales Hub</p>
+            </div>
+          </div>
+          <button type="button" onclick="toggleMobileSidebar(false)" class="lg:hidden p-2 rounded-xl hover:bg-black/5 text-stone-600" aria-label="ปิดเมนู">✕</button>
+        </div>
+
+        <!-- Active Admin Switcher + Email Login -->
+        <div class="mt-4 p-3.5 rounded-2xl bg-white/75 border border-stone-800/10 shadow-2xs space-y-2.5">
+          <div class="flex items-center justify-between text-[11px] font-medium opacity-70">
+            <span>แอดมินที่กำลังใช้งาน</span>
+            <span id="adminPermissionBadge" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">ปรับธีมได้</span>
+          </div>
+          <select id="activeAdminSelect" onchange="switchActiveAdmin(this.value)" class="w-full rounded-xl bg-stone-50 border border-stone-800/10 px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-rose-300"></select>
+          <div class="flex gap-1.5">
+            <input id="quickEmailLoginInput" type="email" onkeydown="if(event.key==='Enter'){event.preventDefault();switchAdminByEmail();}" placeholder="กรอกอีเมลเพื่อระบุตัวตน..." class="w-full rounded-xl bg-stone-50 border border-stone-800/10 px-2.5 py-1.5 text-[11px] focus:outline-none focus:ring-2 focus:ring-rose-300" />
+            <button type="button" onclick="switchAdminByEmail()" class="px-2.5 py-1.5 rounded-xl text-[11px] font-semibold btn-soft shrink-0">เข้าใช้</button>
+          </div>
+          <div id="activeAdminEmailHint" class="text-[11px] text-stone-500 truncate"></div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="mt-5 space-y-1.5" aria-label="เมนูหลัก">
+          <p class="px-3 text-[11px] font-semibold uppercase tracking-wider opacity-45 mb-2">เมนูจัดการระบบ</p>
+          <button type="button" data-route="dashboard" onclick="navigateTo('dashboard')" class="nav-item w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-sm font-medium transition text-left">
+            <span class="w-8 h-8 rounded-xl flex items-center justify-center bg-white/80 shadow-2xs">📊</span>
+            <span>แดชบอร์ดภาพรวม</span>
+          </button>
+          <button type="button" data-route="board" onclick="navigateTo('board')" class="nav-item w-full flex items-center justify-between gap-2 px-3.5 py-3 rounded-2xl text-sm font-medium transition text-left">
+            <span class="flex items-center gap-3">
+              <span class="w-8 h-8 rounded-xl flex items-center justify-center bg-white/80 shadow-2xs">🗂️</span>
+              <span>บอร์ดจัดการออเดอร์</span>
+            </span>
+            <span id="sidebarOrderCount" class="px-2 py-0.5 text-xs rounded-full bg-rose-100 text-rose-800 font-semibold">0</span>
+          </button>
+          <button type="button" data-route="sales" onclick="navigateTo('sales')" class="nav-item w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-sm font-medium transition text-left">
+            <span class="w-8 h-8 rounded-xl flex items-center justify-center bg-white/80 shadow-2xs">📑</span>
+            <span>ตารางสรุปยอดขาย</span>
+          </button>
+          <button type="button" data-route="settings" onclick="navigateTo('settings')" class="nav-item w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-sm font-medium transition text-left">
+            <span class="w-8 h-8 rounded-xl flex items-center justify-center bg-white/80 shadow-2xs">🎨</span>
+            <span>ตั้งค่า Back Office</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Bottom Quick Status & Controls -->
+      <div class="pt-4 mt-6 border-t border-stone-800/10 space-y-2.5">
+        <div class="p-3 rounded-2xl bg-white/65 border border-stone-800/10 text-xs space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="opacity-70">เตือนใกล้ถึงเวลาส่ง</span>
+            <span id="dueAlertBadge" class="px-2 py-0.5 rounded-full font-bold bg-rose-500 text-white text-[11px]">0</span>
+          </div>
+          <div class="flex items-center justify-between pt-1">
+            <button type="button" onclick="toggleSoundAlert()" id="soundToggleBtn" class="text-[11px] font-medium px-2.5 py-1 rounded-xl bg-stone-100 hover:bg-stone-200 transition flex items-center gap-1.5">
+              <span id="soundIcon">🔊</span>
+              <span id="soundLabel">เสียงแจ้งเตือน: เปิด</span>
+            </button>
+            <button type="button" onclick="runReminderCheck(true)" class="text-[11px] underline opacity-75 hover:opacity-100">เช็กตอนนี้</button>
+          </div>
+        </div>
+        <button type="button" onclick="resetDemoData()" class="w-full py-2 px-3 rounded-xl text-[11px] font-medium text-stone-600 hover:text-stone-900 hover:bg-white/60 transition">
+          ↺ ล้างข้อมูลเริ่มบอร์ดเปล่า
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 min-w-0 flex flex-col">
+      <!-- Top Bar -->
+      <header class="sticky top-0 z-20 px-4 sm:px-7 py-3.5 backdrop-blur-md bg-white/45 border-b border-stone-800/10">
+        <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <button type="button" onclick="toggleMobileSidebar(true)" class="lg:hidden p-2.5 rounded-xl btn-soft" aria-label="เปิดเมนู">
+              ☰
+            </button>
+            <div>
+              <h2 id="pageTitle" class="text-lg sm:text-xl font-bold tracking-tight">แดชบอร์ดภาพรวม</h2>
+              <p id="pageSubtitle" class="text-xs opacity-65">สรุปจำนวนออเดอร์ ยอดขายรายวัน/เดือน/ปี และความหนาแน่นคิวงาน</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <!-- Global Search -->
+            <div class="relative">
+              <input id="globalSearchInput" type="text" oninput="handleGlobalSearch(this.value)" placeholder="ค้นหารหัสออเดอร์, ชื่อลูกค้า..." class="w-44 sm:w-64 rounded-2xl bg-white/85 border border-stone-800/10 pl-9 pr-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-rose-300" />
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs opacity-50">🔍</span>
+            </div>
+
+            <!-- Notification Bell -->
+            <div class="relative">
+              <button type="button" onclick="toggleNotificationDrawer()" class="p-2.5 rounded-2xl btn-soft relative" title="รายการแจ้งเตือนล่วงหน้า">
+                🔔
+                <span id="headerBellCount" class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">0</span>
+              </button>
+              <div id="notificationDrawer" class="hidden absolute right-0 mt-2 w-80 sm:w-96 glass-panel p-4 z-40 shadow-xl">
+                <div class="flex items-center justify-between pb-2.5 border-b border-stone-800/10">
+                  <span class="font-bold text-xs">⏰ แจ้งเตือนกำหนดรับ/ส่งสินค้า</span>
+                  <button type="button" onclick="toggleNotificationDrawer()" class="text-xs opacity-60 hover:opacity-100">ปิด</button>
+                </div>
+                <div id="notificationList" class="mt-2.5 max-h-64 overflow-y-auto custom-scroll space-y-2 text-xs"></div>
+              </div>
+            </div>
+
+            <!-- Quick Add Order CTA -->
+            <button type="button" onclick="openQuickNewCard()" class="btn-accent px-4 py-2 rounded-2xl text-xs font-semibold flex items-center gap-1.5 shadow-sm">
+              <span>+ เพิ่มออเดอร์ใหม่</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Dynamic Views -->
+      <main class="flex-1 px-4 sm:px-7 py-6 max-w-[1600px] w-full mx-auto">
+        <!-- VIEW 1: DASHBOARD -->
+        <section id="view-dashboard" class="space-y-6"></section>
+
+        <!-- VIEW 2: KANBAN ORDER BOARD -->
+        <section id="view-board" class="hidden space-y-4">
+          <!-- Filter & Board Action Toolbar -->
+          <div class="glass-panel p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-1.5" id="boardQuickFilters">
+              <button type="button" data-filter="all" onclick="setBoardFilter('all')" class="filter-chip px-3 py-1.5 rounded-xl text-xs font-semibold transition">ทั้งหมด</button>
+              <button type="button" data-filter="today" onclick="setBoardFilter('today')" class="filter-chip px-3 py-1.5 rounded-xl text-xs font-semibold transition">📅 ส่งวันนี้</button>
+              <button type="button" data-filter="dueSoon" onclick="setBoardFilter('dueSoon')" class="filter-chip px-3 py-1.5 rounded-xl text-xs font-semibold transition">⏰ ใกล้ถึงเวลาเตือน</button>
+              <button type="button" data-filter="pickup" onclick="setBoardFilter('pickup')" class="filter-chip px-3 py-1.5 rounded-xl text-xs font-semibold transition">🛍️ รับเอง</button>
+              <button type="button" data-filter="delivery" onclick="setBoardFilter('delivery')" class="filter-chip px-3 py-1.5 rounded-xl text-xs font-semibold transition">🚚 จัดส่ง</button>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <select id="boardAdminFilterSelect" onchange="setBoardAdminFilter(this.value)" class="rounded-xl bg-white/85 border border-stone-800/10 px-3 py-1.5 text-xs font-medium focus:outline-none"></select>
+              <button type="button" onclick="openTeamActivityModal()" class="btn-soft px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                <span>📜 ประวัติการทำงานทีม</span>
+                <span id="teamActivityCountBadge" class="px-1.5 py-0.5 rounded-full bg-stone-800 text-white text-[10px]">0</span>
+              </button>
+              <button type="button" onclick="openArchiveModal()" class="btn-soft px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                <span>📦 การ์ดที่เก็บเข้ากรุ</span>
+                <span id="archiveCountBadge" class="px-1.5 py-0.5 rounded-full bg-stone-200 text-stone-800 text-[10px]">0</span>
+              </button>
+              <button type="button" onclick="addNewList()" class="btn-soft px-3.5 py-1.5 rounded-xl text-xs font-semibold">
+                + เพิ่มช่อง (List)
+              </button>
+            </div>
+          </div>
+
+          <!-- Horizontal Scrollable Kanban Columns -->
+          <div id="boardColumnsContainer" class="flex items-start gap-4 overflow-x-auto pb-6 custom-scroll min-h-[68vh]"></div>
+        </section>
+
+        <!-- VIEW 3: SALES SHEET -->
+        <section id="view-sales" class="hidden space-y-5"></section>
+
+        <!-- VIEW 4: BACK OFFICE SETTINGS -->
+        <section id="view-settings" class="hidden space-y-6"></section>
+      </main>
+    </div>
+  </div>
+
+  <!-- CARD EDIT / CREATE MODAL -->
+  <div id="cardModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-5 bg-stone-900/45 backdrop-blur-xs overflow-y-auto">
+    <div class="glass-panel w-full max-w-2xl p-5 sm:p-7 my-auto shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scroll">
+      <div class="flex items-start justify-between gap-3 pb-4 border-b border-stone-800/10">
+        <div>
+          <span id="cardModalLockBanner" class="hidden inline-flex items-center gap-1.5 px-2.5 py-1 mb-2 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-900"></span>
+          <h3 id="cardModalHeading" class="text-lg font-bold">รายละเอียดการ์ดออเดอร์</h3>
+          <p class="text-xs opacity-65">วางข้อความเทมเพลตออเดอร์ลูกค้าได้เลย ระบบจะดึงชื่อลูกค้า ราคา และวิธีรับสินค้าขึ้นหน้าการ์ดอัตโนมัติ</p>
+        </div>
+        <button type="button" onclick="closeCardModal()" class="p-2 rounded-xl hover:bg-black/5 text-stone-600">✕</button>
+      </div>
+
+      <form id="cardForm" onsubmit="saveCardFromModal(event)" class="mt-4 space-y-4 text-xs">
+        <input type="hidden" id="modalCardId" />
+        <input type="hidden" id="modalListId" />
+
+        <!-- Smart Template Paste Area -->
+        <div class="p-3.5 rounded-2xl bg-rose-50/75 border border-rose-200/70 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <label for="cardRawTemplate" class="font-bold text-rose-950">📋 เทมเพลตออเดอร์ลูกค้า / รายละเอียดงาน</label>
+            <button type="button" onclick="parseTemplateIntoFields(true)" class="px-2.5 py-1 rounded-xl bg-rose-600 text-white font-semibold text-[11px] hover:bg-rose-700 transition">
+              ✨ ดึงข้อมูลอัตโนมัติเดี๋ยวนี้
+            </button>
+          </div>
+          <textarea id="cardRawTemplate" rows="4" oninput="parseTemplateIntoFields(false)" placeholder="ตัวอย่าง:&#10;รหัสออเดอร์: 261122-01-001&#10;ชื่อ: คุณพลอย&#10;ประเภท: รับเอง&#10;ยอดรวม: 1,450 บาท&#10;หมายเหตุ: เค้กสตรอว์เบอร์รี 2 ปอนด์ เขียนหน้าเค้ก HBD" class="w-full rounded-xl bg-white/95 border border-rose-200 p-3 text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-rose-300"></textarea>
+        </div>
+
+        <!-- Extracted 3 Key Highlights + Order Code + Admin -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold mb-1">รหัสออเดอร์ (Auto-ID)</label>
+            <input id="cardOrderCode" type="text" required class="w-full rounded-xl bg-white/90 border border-stone-800/15 px-3 py-2 font-semibold" />
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">แอดมินผู้รับผิดชอบ</label>
+            <select id="cardAdminSelect" class="w-full rounded-xl bg-white/90 border border-stone-800/15 px-3 py-2 font-medium"></select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-semibold mb-1">👤 ชื่อลูกค้า (โชว์หน้าการ์ด)</label>
+            <input id="cardCustomerName" type="text" placeholder="เช่น คุณแพรว" class="w-full rounded-xl bg-white/90 border border-stone-800/15 px-3 py-2" />
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">💰 ราคาค่าสินค้า (บาท)</label>
+            <input id="cardPrice" type="number" min="0" step="1" placeholder="0" class="w-full rounded-xl bg-white/90 border border-stone-800/15 px-3 py-2 font-semibold" />
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">🚚 หมวดการรับสินค้า</label>
+            <select id="cardFulfillment" class="w-full rounded-xl bg-white/90 border border-stone-800/15 px-3 py-2 font-medium">
+              <option value="รับเอง">🛍️ รับเอง</option>
+              <option value="จัดส่ง">🚚 จัดส่ง</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Due Date/Time & Pre-Reminder -->
+        <div class="p-3.5 rounded-2xl muted-surface grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-semibold mb-1">📅 วันและเวลารับ/ส่งสินค้า</label>
+            <input id="cardDueDateTime" type="datetime-local" required class="w-full rounded-xl bg-white border border-stone-800/15 px-3 py-2" />
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">⏰ แจ้งเตือนล่วงหน้า (จำนวน)</label>
+            <input id="cardReminderValue" type="number" min="1" max="72" value="2" class="w-full rounded-xl bg-white border border-stone-800/15 px-3 py-2 font-semibold" />
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">หน่วยเวลาแจ้งเตือน</label>
+            <select id="cardReminderUnit" class="w-full rounded-xl bg-white border border-stone-800/15 px-3 py-2">
+              <option value="hours">ชั่วโมงก่อนถึงเวลา</option>
+              <option value="days">วันก่อนถึงเวลา</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Slip / Image Paste Support (Ctrl+V) -->
+        <div class="p-3.5 rounded-2xl bg-white/75 border border-dashed border-stone-400/50 space-y-2" id="pasteDropZone" tabindex="0">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="font-semibold">🖼️ รูปสลิปโอนเงิน / รูปสินค้า (กด Ctrl+V วางรูปได้ทันที)</span>
+            <label class="px-2.5 py-1 rounded-xl btn-soft cursor-pointer text-[11px] font-medium">
+              อัปโหลดรูป
+              <input type="file" accept="image/*" onchange="handleCardImageUpload(event)" class="hidden" />
+            </label>
+          </div>
+          <div id="cardImagePreviewWrap" class="hidden relative">
+            <img id="cardImagePreview" alt="สลิปหรือรูปสินค้า" class="max-h-44 rounded-xl border border-stone-200 object-contain bg-stone-50" />
+            <button type="button" onclick="clearCardImage()" class="mt-1.5 px-2.5 py-1 rounded-lg bg-rose-100 text-rose-800 text-[11px] font-semibold">ลบรูปภาพนี้</button>
+          </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div id="cardActivitySection" class="p-3 rounded-2xl bg-stone-50/90 border border-stone-200/70 space-y-1.5">
+          <div class="font-semibold text-[11px] opacity-75">🕒 ประวัติการทำรายการ (Activity Log)</div>
+          <div id="cardActivityList" class="max-h-28 overflow-y-auto custom-scroll space-y-1 text-[11px] text-stone-600"></div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="pt-3 border-t border-stone-800/10 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <button type="button" id="deleteCardModalBtn" onclick="deleteCurrentModalCard()" class="px-3.5 py-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 font-semibold transition">
+              🗑️ ลบการ์ดนี้
+            </button>
+            <button type="button" id="archiveCardModalBtn" onclick="archiveCurrentModalCard()" class="px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold transition">
+              📦 เก็บเข้ากรุ
+            </button>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="closeCardModal()" class="px-4 py-2 rounded-xl btn-soft font-semibold">ยกเลิก</button>
+            <button type="submit" class="px-5 py-2 rounded-xl btn-accent font-semibold shadow-sm">บันทึกข้อมูลการ์ด</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ARCHIVE MODAL -->
+  <div id="archiveModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-stone-900/45 backdrop-blur-xs">
+    <div class="glass-panel w-full max-w-xl p-5 sm:p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-stone-800/10 pb-3">
+        <div>
+          <h3 class="font-bold text-base">📦 ประวัติการ์ดที่เก็บเข้ากรุ (Archive)</h3>
+          <p class="text-xs opacity-65">สามารถกู้คืนการ์ดกลับไปยังช่องเดิมหรือลบถาวรได้</p>
+        </div>
+        <button type="button" onclick="closeArchiveModal()" class="p-2 rounded-xl hover:bg-black/5">✕</button>
+      </div>
+      <div id="archiveModalList" class="max-h-80 overflow-y-auto custom-scroll space-y-2 text-xs"></div>
+      <div class="flex justify-between items-center pt-2 border-t border-stone-800/10">
+        <button type="button" onclick="clearAllArchivedCards()" class="px-3 py-1.5 rounded-xl bg-rose-100 text-rose-800 text-xs font-semibold hover:bg-rose-200">ล้างกรุทั้งหมด</button>
+        <button type="button" onclick="closeArchiveModal()" class="px-4 py-1.5 rounded-xl btn-accent text-xs font-semibold">ปิดหน้าต่าง</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEAM ACTIVITY LOG MODAL -->
+  <div id="teamActivityModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-stone-900/45 backdrop-blur-xs">
+    <div class="glass-panel w-full max-w-2xl p-5 sm:p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-stone-800/10 pb-3">
+        <div>
+          <h3 class="font-bold text-base">📜 ประวัติการทำงานของทีมแอดมินทั้งหมด</h3>
+          <p class="text-xs opacity-65">บันทึกอัตโนมัติทุกครั้งที่มีการลงออเดอร์ แก้ไขวัน/เวลา ย้ายช่อง เก็บเข้ากรุ หรือลบการ์ด</p>
+        </div>
+        <button type="button" onclick="closeTeamActivityModal()" class="p-2 rounded-xl hover:bg-black/5">✕</button>
+      </div>
+      <div class="flex items-center gap-2">
+        <select id="teamActivityAdminFilter" onchange="renderTeamActivityList()" class="rounded-xl bg-white/90 border border-stone-800/15 px-3 py-1.5 text-xs font-medium"></select>
+        <span class="text-[11px] text-stone-500">แสดงรายการล่าสุด 150 รายการ</span>
+      </div>
+      <div id="teamActivityModalList" class="max-h-96 overflow-y-auto custom-scroll space-y-2 text-xs"></div>
+      <div class="flex justify-end pt-2 border-t border-stone-800/10">
+        <button type="button" onclick="closeTeamActivityModal()" class="px-4 py-1.5 rounded-xl btn-accent text-xs font-semibold">ปิดหน้าต่าง</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOM CONFIRM DIALOG -->
+  <div id="confirmModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-stone-900/45 backdrop-blur-xs">
+    <div class="glass-panel w-full max-w-md p-6 shadow-2xl space-y-4">
+      <h3 id="confirmTitle" class="font-bold text-base">ยืนยันการทำรายการ</h3>
+      <p id="confirmMessage" class="text-xs opacity-80 leading-relaxed"></p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeConfirmModal(false)" class="px-4 py-2 rounded-xl btn-soft text-xs font-semibold">ยกเลิก</button>
+        <button type="button" onclick="closeConfirmModal(true)" class="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'backoffice_studio_clean_v3';
+
+    const DEFAULT_ADMINS = [
+      { id: 'admin_owner', name: 'แอดมินหลัก (หัวหน้าทีม)', email: 'owner@shop.com', role: 'Super Admin', avatar: '👑' },
+      { id: 'admin_pum', name: 'ปุ้ม', email: 'pum@shop.com', role: 'Admin ออเดอร์', avatar: '🌸' },
+      { id: 'admin_kungking', name: 'กุ๊งกิ๊ง', email: 'kungking@shop.com', role: 'Admin ออเดอร์', avatar: '🍑' }
+    ];
+
+    const BG_PRESETS = [
+      {
+        id: 'warm_blush',
+        name: 'Warm Blush & Cream',
+        canvas: 'linear-gradient(135deg, #fdf6ef 0%, #fce8ec 48%, #faece1 100%)',
+        blob1: 'rgba(247, 178, 189, 0.36)',
+        blob2: 'rgba(251, 194, 152, 0.34)'
+      },
+      {
+        id: 'soft_rose',
+        name: 'Soft Rose Editorial',
+        canvas: 'linear-gradient(135deg, #fbe8ee 0%, #f6d5e0 52%, #f9eef2 100%)',
+        blob1: 'rgba(229, 134, 162, 0.34)',
+        blob2: 'rgba(245, 190, 208, 0.36)'
+      },
+      {
+        id: 'sand_minimal',
+        name: 'Sandstone Minimal',
+        canvas: 'linear-gradient(135deg, #f7f3eb 0%, #efe7da 55%, #f8f4ec 100%)',
+        blob1: 'rgba(224, 197, 158, 0.34)',
+        blob2: 'rgba(236, 214, 184, 0.34)'
+      },
+      {
+        id: 'peach_aura',
+        name: 'Peach Aura Mesh',
+        canvas: 'linear-gradient(135deg, #fff5ee 0%, #ffe3d3 50%, #fce8f0 100%)',
+        blob1: 'rgba(255, 166, 118, 0.34)',
+        blob2: 'rgba(245, 168, 196, 0.30)'
+      },
+      {
+        id: 'sage_pastel',
+        name: 'Pistachio & Lavender',
+        canvas: 'linear-gradient(135deg, #f4f7ef 0%, #ebe7f7 52%, #f7f3eb 100%)',
+        blob1: 'rgba(190, 214, 152, 0.34)',
+        blob2: 'rgba(205, 184, 238, 0.32)'
+      }
+    ];
+
+    function formatLocalDateTimeInput(dateObj) {
+      const pad = n => String(n).padStart(2, '0');
+      return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())}T${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
+    }
+
+    function createDefaultState() {
+      return {
+        activeRoute: 'board',
+        activeAdminId: 'admin_owner',
+        soundEnabled: true,
+        boardFilter: 'all',
+        boardAdminFilter: 'all',
+        searchQuery: '',
+        dashboardPeriod: 'month',
+        salesSelectedMonth: '2026-11',
+        theme: {
+          bgPresetId: 'warm_blush',
+          customBgUrl: '',
+          accentPrimary: '#d96b88',
+          accentSecondary: '#e89968',
+          accentDark: '#1f1918',
+          fontFamily: "'Prompt', 'Noto Sans Thai', sans-serif",
+          fontSize: 15,
+          adminPermissions: {
+            admin_owner: true,
+            admin_pum: true,
+            admin_kungking: false
+          }
+        },
+        admins: JSON.parse(JSON.stringify(DEFAULT_ADMINS)),
+        lists: [
+          {
+            id: 'list_1',
+            title: '1-ลูกค้าสั่งออเดอร์และแจ้งประเภทการชำระแล้ว (ออเดอร์ที่รับมาวันนี้) **กำหนด due date**',
+            autoSort: false,
+            cards: []
+          },
+          {
+            id: 'list_2',
+            title: '2-แอดมินแจ้งออเดอร์กับสาขาแล้ว **ออเดอร์จัดส่งวันพรุ่งนี้ย้ายไปแถวที่ 3**',
+            autoSort: true,
+            cards: []
+          },
+          {
+            id: 'list_3',
+            title: '3-รอการจัดส่ง >> จัดส่งตั้งค่าส่งสินค้าให้ลูกค้า',
+            autoSort: true,
+            cards: []
+          },
+          {
+            id: 'list_4',
+            title: '4-จัดส่งเรียบร้อย >> ปิดงาน',
+            autoSort: false,
+            cards: []
+          }
+        ],
+        archivedCards: [],
+        teamLogs: [],
+        editingLocks: {},
+        triggeredReminders: {},
+        salesRows: []
+      };
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return createDefaultState();
+        const parsed = JSON.parse(raw);
+        const def = createDefaultState();
+        return {
+          ...def,
+          ...parsed,
+          admins: Array.isArray(parsed.admins) && parsed.admins.length ? parsed.admins : def.admins,
+          theme: {
+            ...def.theme,
+            ...(parsed.theme || {}),
+            adminPermissions: {
+              ...def.theme.adminPermissions,
+              ...((parsed.theme && parsed.theme.adminPermissions) || {})
+            }
+          }
+        };
+      } catch (e) {
+        return createDefaultState();
+      }
+    }
+
+    let state = loadState();
+    let openMenuListId = null;
+    let draggedCardInfo = null;
+    let draggedListId = null;
+    let pendingCardImage = '';
+    let confirmResolver = null;
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        showToast('พื้นที่จัดเก็บเบราว์เซอร์เต็ม กรุณาลบรูปภาพขนาดใหญ่บางส่วน', 'warn');
+      }
+    }
+
+    function getAdminsList() {
+      if (!Array.isArray(state.admins) || !state.admins.length) {
+        state.admins = JSON.parse(JSON.stringify(DEFAULT_ADMINS));
+      }
+      return state.admins;
+    }
+
+    function getAdminById(id) {
+      const admins = getAdminsList();
+      return admins.find(a => a.id === id) || admins[0];
+    }
+
+    function canCurrentAdminEditTheme() {
+      return Boolean(state.theme.adminPermissions && state.theme.adminPermissions[state.activeAdminId]);
+    }
+
+    function formatCurrency(num) {
+      return Number(num || 0).toLocaleString('th-TH') + ' ฿';
+    }
+
+    function formatThaiDateTime(isoStr) {
+      if (!isoStr) return '-';
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return isoStr;
+      return d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short' }) + ' ' +
+             d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.';
+    }
+
+    function isToday(isoStr) {
+      if (!isoStr) return false;
+      const d = new Date(isoStr);
+      const now = new Date();
+      return d.getFullYear() === now.getFullYear() &&
+             d.getMonth() === now.getMonth() &&
+             d.getDate() === now.getDate();
+    }
+
+    function isCardDueSoon(card) {
+      if (!card || !card.dueAt) return false;
+      const dueMs = new Date(card.dueAt).getTime();
+      if (isNaN(dueMs)) return false;
+      const nowMs = Date.now();
+      const val = Number(card.reminderValue || 2);
+      const unitMs = card.reminderUnit === 'days' ? 86400000 : 3600000;
+      const thresholdMs = dueMs - (val * unitMs);
+      return nowMs >= thresholdMs && nowMs <= dueMs + 3600000;
+    }
+
+    function generateNextOrderCode() {
+      const now = new Date();
+      const yy = String(now.getFullYear()).slice(-2);
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const adminIdx = Math.max(1, getAdminsList().findIndex(a => a.id === state.activeAdminId) + 1);
+      const totalExisting = getAllBoardOrders().length + 1;
+      return `${yy}${mm}${dd}-0${adminIdx}-${String(totalExisting).padStart(3, '0')}`;
+    }
+
+    function getAllBoardOrders() {
+      const all = [];
+      state.lists.forEach((list, idx) => {
+        const isClosed = idx === state.lists.length - 1 || list.title.includes('ปิดงาน');
+        list.cards.forEach(card => {
+          all.push({ ...card, listId: list.id, listTitle: list.title, isClosed });
+        });
+      });
+      return all;
+    }
+
+    function getNowLogTime() {
+      const now = new Date();
+      return now.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) + ' ' +
+             now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.';
+    }
+
+    function logTeamAction(actionText, orderCode = '', targetCard = null) {
+      const actor = getAdminById(state.activeAdminId);
+      const stamp = getNowLogTime();
+      const entry = {
+        id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        adminId: actor.id,
+        adminName: actor.name,
+        adminEmail: actor.email || '',
+        orderCode: orderCode || '-',
+        action: actionText,
+        time: stamp
+      };
+      state.teamLogs = state.teamLogs || [];
+      state.teamLogs.unshift(entry);
+      if (state.teamLogs.length > 300) {
+        state.teamLogs = state.teamLogs.slice(0, 300);
+      }
+      if (targetCard) {
+        targetCard.logs = targetCard.logs || [];
+        targetCard.logs.unshift(`${stamp} · แอดมิน${actor.name} ${actionText}`);
+        targetCard.lastUpdatedBy = actor.name;
+        targetCard.lastActionSummary = `แอดมิน${actor.name} ${actionText} (${stamp})`;
+      }
+    }
+
+    // Smart Order Template Parser
+    function parseOrderTemplateText(text) {
+      const src = String(text || '');
+      let customer = '';
+      let price = null;
+      let fulfillment = '';
+      let orderCode = '';
+
+      const codeMatch = src.match(/(?:รหัส(?:ออเดอร์)?\s*[:：]?\s*)([A-Za-z0-9-]{6,})/i) || src.match(/\b(\d{6}-\d{2}-\d{3}(?:-[A-Za-z]+)?)\b/);
+      if (codeMatch) orderCode = codeMatch[1].trim();
+
+      const nameMatch = src.match(/(?:ชื่อ(?:ลูกค้า)?|ลูกค้า)\s*[:：]\s*([^\n\r]+)/i);
+      if (nameMatch) customer = nameMatch[1].trim();
+
+      const priceMatch = src.match(/(?:ยอดรวม|ราคา|ยอดโอน|รวม)\s*[:：]?\s*([\d,]+(?:\.\d+)?)\s*(?:บาท|฿)?/i) ||
+                         src.match(/([\d,]+(?:\.\d+)?)\s*(?:บาท|฿)/i);
+      if (priceMatch) {
+        const numeric = Number(priceMatch[1].replace(/,/g, ''));
+        if (!isNaN(numeric)) price = numeric;
+      }
+
+      if (/รับเอง|หน้าร้าน|pickup/i.test(src)) {
+        fulfillment = 'รับเอง';
+      } else if (/จัดส่ง|ส่งด่วน|ไรเดอร์|delivery|แมส/i.test(src)) {
+        fulfillment = 'จัดส่ง';
+      }
+
+      return { customer, price, fulfillment, orderCode };
+    }
+
+    // Theme & Typography Application
+    function applyThemeToDOM() {
+      const root = document.documentElement;
+      const t = state.theme;
+      const preset = BG_PRESETS.find(p => p.id === t.bgPresetId) || BG_PRESETS[0];
+
+      if (t.customBgUrl && t.customBgUrl.trim()) {
+        root.style.setProperty('--bg-canvas', `url('${t.customBgUrl.trim()}') center/cover fixed no-repeat`);
+        document.getElementById('blob1').style.opacity = '0.18';
+        document.getElementById('blob2').style.opacity = '0.18';
+      } else {
+        root.style.setProperty('--bg-canvas', preset.canvas);
+        root.style.setProperty('--bg-blob-1', preset.blob1);
+        root.style.setProperty('--bg-blob-2', preset.blob2);
+        document.getElementById('blob1').style.opacity = '1';
+        document.getElementById('blob2').style.opacity = '1';
+      }
+
+      root.style.setProperty('--accent-primary', t.accentPrimary);
+      root.style.setProperty('--accent-secondary', t.accentSecondary);
+      root.style.setProperty('--accent-dark', t.accentDark);
+      root.style.setProperty('--font-family-main', t.fontFamily);
+      root.style.setProperty('--font-scale', `${t.fontSize}px`);
+    }
+
+    // Navigation & Sidebar
+    function toggleMobileSidebar(open) {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('mobileBackdrop');
+      if (open) {
+        sidebar.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    }
+
+    function navigateTo(route) {
+      state.activeRoute = route;
+      saveState();
+      toggleMobileSidebar(false);
+
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        const active = btn.dataset.route === route;
+        btn.classList.toggle('btn-accent', active);
+        btn.classList.toggle('shadow-sm', active);
+        btn.classList.toggle('hover:bg-white/65', !active);
+      });
+
+      ['dashboard', 'board', 'sales', 'settings'].forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        if (el) el.classList.toggle('hidden', v !== route);
+      });
+
+      const meta = {
+        dashboard: ['แดชบอร์ดภาพรวม', 'สรุปจำนวนออเดอร์ ยอดขายรายวัน/เดือน/ปี และวันออเดอร์พีค'],
+        board: ['บอร์ดจัดการออเดอร์ (Kanban)', 'ลากย้ายการ์ด เรียงคิวตามกำหนดส่ง และแจ้งเตือนล่วงหน้าอัตโนมัติ'],
+        sales: ['ตารางสรุปยอดขายรายวัน & แยกแอดมิน', 'ซิงก์ยอดขายจากบอร์ดอัตโนมัติ พร้อมบันทึกหมายเหตุคืนเงินและส่งออกไฟล์'],
+        settings: ['ตั้งค่า Back Office & ธีมระบบ', 'ปรับพื้นหลัง โทนสี ขนาด/แบบฟอนต์ และกำหนดสิทธิ์การปรับแต่งรายบุคคล']
+      };
+
+      document.getElementById('pageTitle').textContent = meta[route][0];
+      document.getElementById('pageSubtitle').textContent = meta[route][1];
+
+      if (route === 'dashboard') renderDashboard();
+      if (route === 'board') renderBoard();
+      if (route === 'sales') renderSalesSheet();
+      if (route === 'settings') renderSettingsView();
+    }
+
+    function renderAdminSelectors() {
+      const admins = getAdminsList();
+      if (!admins.some(a => a.id === state.activeAdminId)) {
+        state.activeAdminId = admins[0].id;
+      }
+
+      const activeSelect = document.getElementById('activeAdminSelect');
+      activeSelect.innerHTML = admins.map(a =>
+        `<option value="${a.id}" ${a.id === state.activeAdminId ? 'selected' : ''}>${a.avatar} ${escapeHtml(a.name)} — ${escapeHtml(a.role)}</option>`
+      ).join('');
+
+      const boardFilterSel = document.getElementById('boardAdminFilterSelect');
+      if (boardFilterSel) {
+        boardFilterSel.innerHTML = `<option value="all">👤 แอดมินทุกคน</option>` + admins.map(a =>
+          `<option value="${a.id}" ${state.boardAdminFilter === a.id ? 'selected' : ''}>${a.avatar} ${escapeHtml(a.name)}</option>`
+        ).join('');
+      }
+
+      const cardAdminSel = document.getElementById('cardAdminSelect');
+      if (cardAdminSel) {
+        cardAdminSel.innerHTML = admins.map(a =>
+          `<option value="${a.id}">${a.avatar} ${escapeHtml(a.name)}</option>`
+        ).join('');
+      }
+
+      updateActiveAdminBadge();
+    }
+
+    function switchActiveAdmin(adminId) {
+      state.activeAdminId = adminId;
+      saveState();
+      updateActiveAdminBadge();
+      if (state.activeRoute === 'settings') renderSettingsView();
+      const adm = getAdminById(adminId);
+      showToast(`สลับผู้ใช้งานเป็น: ${adm.name}${adm.email ? ` (${adm.email})` : ''}`, 'info');
+    }
+
+    function switchAdminByEmail() {
+      const input = document.getElementById('quickEmailLoginInput');
+      const email = (input?.value || '').trim().toLowerCase();
+      if (!email) {
+        showToast('กรุณากรอกอีเมลแอดมินก่อนกดเข้าใช้', 'warn');
+        return;
+      }
+      const matched = getAdminsList().find(a => (a.email || '').trim().toLowerCase() === email);
+      if (!matched) {
+        showToast(`ไม่พบอีเมล "${email}" ในรายชื่อแอดมิน (เพิ่มได้ที่หน้าตั้งค่า Back Office)`, 'warn');
+        return;
+      }
+      input.value = '';
+      switchActiveAdmin(matched.id);
+      renderAdminSelectors();
+    }
+
+    function updateActiveAdminBadge() {
+      const badge = document.getElementById('adminPermissionBadge');
+      const emailHint = document.getElementById('activeAdminEmailHint');
+      const activeAdm = getAdminById(state.activeAdminId);
+      if (emailHint) {
+        emailHint.textContent = activeAdm.email ? `📧 ${activeAdm.email}` : 'ยังไม่ได้ผูกอีเมล';
+      }
+      if (canCurrentAdminEditTheme()) {
+        badge.textContent = 'ปรับธีมได้';
+        badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800';
+      } else {
+        badge.textContent = 'ดูได้อย่างเดียว';
+        badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-semibold bg-stone-200 text-stone-700';
+      }
+    }
+
+    function handleGlobalSearch(q) {
+      state.searchQuery = q.trim().toLowerCase();
+      if (state.activeRoute === 'board') renderBoard();
+      if (state.activeRoute === 'sales') renderSalesSheet();
+    }
+
+    // VIEW 1: DASHBOARD RENDERER
+    function setDashboardPeriod(period) {
+      state.dashboardPeriod = period;
+      saveState();
+      renderDashboard();
+    }
+
+    function renderDashboard() {
+      const container = document.getElementById('view-dashboard');
+      const boardOrders = getAllBoardOrders();
+      document.getElementById('sidebarOrderCount').textContent = boardOrders.length;
+
+      const dailyMap = {};
+      state.salesRows.forEach(r => {
+        const net = Number(r.totalSales || 0) - Number(r.refundAmount || 0);
+        dailyMap[r.date] = {
+          date: r.date,
+          orders: Number(r.orderCount || 0),
+          revenue: Math.max(0, net)
+        };
+      });
+
+      boardOrders.forEach(o => {
+        const dKey = (o.dueAt || '').slice(0, 10);
+        if (!dKey) return;
+        if (!dailyMap[dKey]) {
+          dailyMap[dKey] = { date: dKey, orders: 0, revenue: 0 };
+        }
+        if (!state.salesRows.some(r => r.date === dKey)) {
+          dailyMap[dKey].orders += 1;
+          dailyMap[dKey].revenue += Number(o.price || 0);
+        }
+      });
+
+      const allDays = Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date));
+      const todayIso = new Date().toISOString().slice(0, 10);
+      const currentMonthPrefix = state.salesSelectedMonth || todayIso.slice(0, 7);
+      const currentYearPrefix = currentMonthPrefix.slice(0, 4);
+
+      const todayStats = dailyMap[todayIso] || (allDays[allDays.length - 1] || { orders: 0, revenue: 0, date: todayIso });
+      const monthDays = allDays.filter(d => d.date.startsWith(currentMonthPrefix));
+      const yearDays = allDays.filter(d => d.date.startsWith(currentYearPrefix));
+
+      const sumMetrics = arr => arr.reduce((acc, x) => ({ orders: acc.orders + x.orders, revenue: acc.revenue + x.revenue }), { orders: 0, revenue: 0 });
+      const monthSum = sumMetrics(monthDays);
+      const yearSum = sumMetrics(yearDays);
+
+      const sortedByOrders = [...monthDays].sort((a, b) => b.orders - a.orders);
+      const peakDay = sortedByOrders[0] || { date: '-', orders: 0, revenue: 0 };
+      const quietDay = sortedByOrders[sortedByOrders.length - 1] || { date: '-', orders: 0, revenue: 0 };
+
+      const chartSource = state.dashboardPeriod === 'year'
+        ? (() => {
+            const byMonth = {};
+            yearDays.forEach(d => {
+              const m = d.date.slice(0, 7);
+              if (!byMonth[m]) byMonth[m] = { label: m, orders: 0, revenue: 0 };
+              byMonth[m].orders += d.orders;
+              byMonth[m].revenue += d.revenue;
+            });
+            return Object.values(byMonth);
+          })()
+        : monthDays.slice(-14).map(d => ({ label: d.date.slice(8, 10) + '/' + d.date.slice(5, 7), orders: d.orders, revenue: d.revenue }));
+
+      const maxOrdersInChart = Math.max(1, ...chartSource.map(c => c.orders));
+
+      const adminStats = getAdminsList().map(adm => {
+        const cards = boardOrders.filter(c => c.adminId === adm.id);
+        const total = cards.reduce((s, c) => s + Number(c.price || 0), 0);
+        return { ...adm, count: cards.length, total };
+      });
+
+      const recentLogs = (state.teamLogs || []).slice(0, 8);
+
+      container.innerHTML = `
+        <div class="glass-panel p-6 sm:p-7 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden">
+          <div class="space-y-1.5 z-10">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/80 border border-stone-800/10">
+              ✨ Live Operations Overview
+            </span>
+            <h3 class="text-xl sm:text-2xl font-bold tracking-tight">สวัสดี, ${escapeHtml(getAdminById(state.activeAdminId).name)}</h3>
+            <p class="text-xs sm:text-sm opacity-70">ติดตามยอดขายรายวัน รายเดือน รายปี และความหนาแน่นออเดอร์แบบเรียลไทม์</p>
+          </div>
+          <div class="flex items-center gap-2 z-10 bg-white/75 p-1.5 rounded-2xl border border-stone-800/10">
+            <button type="button" onclick="setDashboardPeriod('month')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${state.dashboardPeriod === 'month' ? 'btn-accent' : 'hover:bg-black/5'}">รายเดือน (${currentMonthPrefix})</button>
+            <button type="button" onclick="setDashboardPeriod('year')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${state.dashboardPeriod === 'year' ? 'btn-accent' : 'hover:bg-black/5'}">รายปี (${currentYearPrefix})</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div class="glass-panel p-5 space-y-2">
+            <div class="flex items-center justify-between text-xs opacity-70">
+              <span>ยอดขายประจำวัน (${todayStats.date})</span>
+              <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-semibold">${todayStats.orders} ออเดอร์</span>
+            </div>
+            <div class="text-2xl font-bold tracking-tight">${formatCurrency(todayStats.revenue)}</div>
+            <div class="text-[11px] opacity-60">เฉลี่ย ${todayStats.orders ? formatCurrency(Math.round(todayStats.revenue / todayStats.orders)) : '0 ฿'} / ออเดอร์</div>
+          </div>
+
+          <div class="glass-panel p-5 space-y-2">
+            <div class="flex items-center justify-between text-xs opacity-70">
+              <span>ยอดรวมประจำเดือน (${currentMonthPrefix})</span>
+              <span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-900 font-semibold">${monthSum.orders} ออเดอร์</span>
+            </div>
+            <div class="text-2xl font-bold tracking-tight">${formatCurrency(monthSum.revenue)}</div>
+            <div class="text-[11px] opacity-60">สะสม ${monthDays.length} วันทำการ</div>
+          </div>
+
+          <div class="glass-panel p-5 space-y-2">
+            <div class="flex items-center justify-between text-xs opacity-70">
+              <span>ยอดรวมประจำปี (${currentYearPrefix})</span>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-semibold">${yearSum.orders} ออเดอร์</span>
+            </div>
+            <div class="text-2xl font-bold tracking-tight">${formatCurrency(yearSum.revenue)}</div>
+            <div class="text-[11px] opacity-60">ข้อมูลรวมทั้งปีจากตารางสรุปยอด</div>
+          </div>
+
+          <div class="glass-panel p-5 space-y-2">
+            <div class="flex items-center justify-between text-xs opacity-70">
+              <span>วันออเดอร์เยอะ vs น้อย</span>
+              <span>📈📉</span>
+            </div>
+            <div class="text-xs space-y-1 pt-0.5">
+              <div class="flex items-center justify-between px-2.5 py-1 rounded-xl bg-rose-100/80 text-rose-950 font-semibold">
+                <span>🔥 พีคสุด: ${peakDay.date}</span>
+                <span>${peakDay.orders} ออเดอร์</span>
+              </div>
+              <div class="flex items-center justify-between px-2.5 py-1 rounded-xl bg-stone-100 text-stone-700 font-medium">
+                <span>🍃 น้อยสุด: ${quietDay.date}</span>
+                <span>${quietDay.orders} ออเดอร์</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="glass-panel p-5 sm:p-6 lg:col-span-2 flex flex-col justify-between space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="font-bold text-base">กราฟปริมาณออเดอร์ (${state.dashboardPeriod === 'year' ? 'รายเดือน' : 'รายวัน'})</h4>
+                <p class="text-xs opacity-65">เปรียบเทียบวันที่มีออเดอร์หนาแน่นและวันที่ยอดเบาลง</p>
+              </div>
+              <span class="text-xs font-semibold px-3 py-1 rounded-full muted-surface">สูงสุด ${maxOrdersInChart} ออเดอร์</span>
+            </div>
+
+            ${chartSource.length ? `
+              <div class="h-56 flex items-end gap-2 sm:gap-3 pt-6 pb-2 px-1 overflow-x-auto custom-scroll">
+                ${chartSource.map(item => {
+                  const pct = Math.max(10, Math.round((item.orders / maxOrdersInChart) * 100));
+                  const isHigh = item.orders >= maxOrdersInChart * 0.75;
+                  return `
+                    <div class="flex-1 min-w-[38px] flex flex-col items-center gap-1.5 group">
+                      <span class="text-[10px] font-bold opacity-75 group-hover:opacity-100">${item.orders}</span>
+                      <div class="w-full h-36 flex items-end justify-center">
+                        <div style="height: ${pct}%; background: ${isHigh ? 'var(--accent-primary)' : 'var(--accent-secondary)'};"
+                             title="${item.label}: ${item.orders} ออเดอร์ (${formatCurrency(item.revenue)})"
+                             class="w-full max-w-[34px] rounded-t-xl transition-all duration-300 group-hover:opacity-90 shadow-2xs"></div>
+                      </div>
+                      <span class="text-[10px] opacity-65 font-medium">${item.label}</span>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            ` : `<div class="h-44 flex items-center justify-center text-xs text-stone-400">ยังไม่มีข้อมูลกราฟ — เริ่มเพิ่มออเดอร์ที่หน้าบอร์ดหรือหน้ายอดขายได้เลย</div>`}
+          </div>
+
+          <div class="glass-panel p-5 sm:p-6 space-y-4">
+            <div>
+              <h4 class="font-bold text-base">ปฏิทินความหนาแน่นออเดอร์</h4>
+              <p class="text-xs opacity-65">สีเข้ม = ออเดอร์เยอะ · สีอ่อน = ออเดอร์น้อย</p>
+            </div>
+            <div class="grid grid-cols-7 gap-1.5 text-center text-[11px]">
+              ${['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'].map(d => `<div class="font-semibold opacity-50 pb-1">${d}</div>`).join('')}
+              ${Array.from({ length: 30 }, (_, i) => {
+                const dayNum = String(i + 1).padStart(2, '0');
+                const dateStr = `${currentMonthPrefix}-${dayNum}`;
+                const found = dailyMap[dateStr];
+                const cnt = found ? found.orders : 0;
+                let bgClass = 'bg-white/60 text-stone-500';
+                if (cnt >= 20) bgClass = 'bg-rose-500 text-white font-bold shadow-2xs';
+                else if (cnt >= 12) bgClass = 'bg-rose-300 text-rose-950 font-semibold';
+                else if (cnt >= 1) bgClass = 'bg-amber-200/80 text-stone-800 font-medium';
+                return `
+                  <div title="${dateStr}: ${cnt} ออเดอร์" class="aspect-square rounded-xl flex flex-col items-center justify-center ${bgClass} border border-stone-800/5">
+                    <span>${i + 1}</span>
+                    ${cnt ? `<span class="text-[9px] leading-none opacity-85">${cnt}</span>` : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <div class="pt-2 border-t border-stone-800/10 space-y-2">
+              <div class="text-xs font-bold">ยอดออเดอร์บนบอร์ดแยกตามแอดมิน</div>
+              ${adminStats.map(a => `
+                <div class="flex items-center justify-between text-xs p-2 rounded-xl bg-white/70">
+                  <span>${a.avatar} ${escapeHtml(a.name)} (${a.count} งาน)</span>
+                  <span class="font-bold">${formatCurrency(a.total)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-panel p-5 sm:p-6 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="font-bold text-base">📜 ความเคลื่อนไหวล่าสุดของทีมแอดมิน</h4>
+              <p class="text-xs opacity-65">ติดตามว่าแอดมินคนไหนลงออเดอร์ ปรับวันเวลา ย้ายช่อง หรือลบการ์ด</p>
+            </div>
+            <button type="button" onclick="openTeamActivityModal()" class="btn-soft px-3 py-1.5 rounded-xl text-xs font-semibold">ดูประวัติทั้งหมด</button>
+          </div>
+          ${recentLogs.length ? `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+              ${recentLogs.map(log => `
+                <div class="p-3 rounded-2xl bg-white/75 border border-stone-800/10 text-xs flex items-start justify-between gap-2">
+                  <div>
+                    <span class="font-bold text-rose-900">แอดมิน${escapeHtml(log.adminName)}</span>
+                    <span class="text-stone-700">${escapeHtml(log.action)}</span>
+                  </div>
+                  <span class="text-[10px] text-stone-400 shrink-0">${escapeHtml(log.time)}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : `<div class="text-xs text-stone-400 py-3">ยังไม่มีประวัติการทำงาน — เมื่อแอดมินเพิ่มหรือแก้ไขการ์ด ประวัติจะแสดงที่นี่อัตโนมัติ</div>`}
+        </div>
+      `;
+    }
+
+    // VIEW 2: KANBAN ORDER BOARD
+    function setBoardFilter(filterKey) {
+      state.boardFilter = filterKey;
+      saveState();
+      renderBoard();
+    }
+
+    function setBoardAdminFilter(adminId) {
+      state.boardAdminFilter = adminId;
+      saveState();
+      renderBoard();
+    }
+
+    function cardMatchesActiveFilters(card) {
+      if (state.boardAdminFilter !== 'all' && card.adminId !== state.boardAdminFilter) return false;
+      if (state.boardFilter === 'today' && !isToday(card.dueAt)) return false;
+      if (state.boardFilter === 'dueSoon' && !isCardDueSoon(card)) return false;
+      if (state.boardFilter === 'pickup' && card.fulfillment !== 'รับเอง') return false;
+      if (state.boardFilter === 'delivery' && card.fulfillment !== 'จัดส่ง') return false;
+
+      if (state.searchQuery) {
+        const hay = `${card.orderCode} ${card.customer} ${card.fulfillment} ${card.rawTemplate}`.toLowerCase();
+        if (!hay.includes(state.searchQuery)) return false;
+      }
+      return true;
+    }
+
+    function renderBoard() {
+      document.getElementById('sidebarOrderCount').textContent = getAllBoardOrders().length;
+      const archiveBadge = document.getElementById('archiveCountBadge');
+      if (archiveBadge) archiveBadge.textContent = (state.archivedCards || []).length;
+      const activityBadge = document.getElementById('teamActivityCountBadge');
+      if (activityBadge) activityBadge.textContent = (state.teamLogs || []).length;
+
+      document.querySelectorAll('.filter-chip').forEach(btn => {
+        const active = btn.dataset.filter === state.boardFilter;
+        btn.classList.toggle('btn-accent', active);
+        btn.classList.toggle('btn-soft', !active);
+      });
+
+      const container = document.getElementById('boardColumnsContainer');
+      container.innerHTML = state.lists.map((list, listIndex) => {
+        if (list.autoSort) {
+          list.cards.sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
+        }
+
+        const visibleCards = list.cards.filter(cardMatchesActiveFilters);
+        const listSum = visibleCards.reduce((s, c) => s + Number(c.price || 0), 0);
+
+        return `
+          <div class="glass-panel w-80 sm:w-[340px] shrink-0 p-3.5 flex flex-col max-h-[76vh] transition"
+               draggable="true"
+               ondragstart="handleListDragStart(event, '${list.id}')"
+               ondragover="handleColumnDragOver(event)"
+               ondragleave="handleColumnDragLeave(event)"
+               ondrop="handleColumnDrop(event, '${list.id}')">
+            <div class="flex items-start justify-between gap-2 pb-2.5 border-b border-stone-800/10 relative">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5 mb-1">
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-stone-800 text-white">${visibleCards.length}</span>
+                  <span class="text-[11px] font-semibold opacity-65">${formatCurrency(listSum)}</span>
+                  ${list.autoSort ? `<span class="px-1.5 py-0.5 rounded-md text-[10px] bg-amber-100 text-amber-900 font-semibold">Auto-Sort</span>` : ''}
+                </div>
+                <textarea rows="2" onchange="updateListTitle('${list.id}', this.value)"
+                  class="w-full bg-transparent font-bold text-xs leading-snug resize-none rounded-lg px-1.5 py-1 hover:bg-white/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-300">${escapeHtml(list.title)}</textarea>
+              </div>
+
+              <div class="flex items-center gap-0.5 shrink-0">
+                <button type="button" onclick="confirmDeleteList('${list.id}')" title="ลบช่องนี้" class="p-1.5 rounded-xl hover:bg-rose-100 text-stone-500 hover:text-rose-700 text-xs transition">
+                  🗑️
+                </button>
+                <div class="relative">
+                  <button type="button" onclick="toggleListMenu(event, '${list.id}')" title="ตัวเลือกจัดการช่อง" class="p-1.5 rounded-xl hover:bg-black/5 font-bold text-sm">
+                    •••
+                  </button>
+                  ${openMenuListId === list.id ? `
+                    <div onclick="event.stopPropagation()" class="absolute right-0 mt-1 w-60 bg-white rounded-2xl shadow-xl border border-stone-200 py-1.5 z-30 text-xs">
+                      <div class="px-3 py-1.5 text-[11px] font-bold text-stone-400 border-b border-stone-100">List Actions</div>
+                      <button type="button" onclick="openCardModal(null, '${list.id}'); closeListMenu();" class="w-full text-left px-3.5 py-2 hover:bg-rose-50 font-medium">+ Add card (เพิ่มการ์ด)</button>
+                      <button type="button" onclick="copyList('${list.id}')" class="w-full text-left px-3.5 py-2 hover:bg-rose-50 font-medium">📋 Copy list (คัดลอกช่อง)</button>
+                      <div class="px-3.5 py-1.5 flex items-center justify-between hover:bg-rose-50">
+                        <span class="font-medium">↔️ Move list (ย้ายช่อง)</span>
+                        <span class="flex gap-1">
+                          <button type="button" onclick="moveListStep('${list.id}', -1)" ${listIndex === 0 ? 'disabled' : ''} class="px-2 py-0.5 rounded bg-stone-100 hover:bg-stone-200 disabled:opacity-30">◀</button>
+                          <button type="button" onclick="moveListStep('${list.id}', 1)" ${listIndex === state.lists.length - 1 ? 'disabled' : ''} class="px-2 py-0.5 rounded bg-stone-100 hover:bg-stone-200 disabled:opacity-30">▶</button>
+                        </span>
+                      </div>
+                      <div class="border-t border-stone-100 my-1"></div>
+                      <button type="button" onclick="sortListCards('${list.id}', 'dueAsc')" class="w-full text-left px-3.5 py-2 hover:bg-rose-50 font-medium">⏰ Sort by: วัน-เวลาใกล้สุดก่อน</button>
+                      <button type="button" onclick="sortListCards('${list.id}', 'dueDesc')" class="w-full text-left px-3.5 py-2 hover:bg-rose-50 font-medium">📅 Sort by: วัน-เวลาไกลสุดก่อน</button>
+                      <button type="button" onclick="sortListCards('${list.id}', 'priceDesc')" class="w-full text-left px-3.5 py-2 hover:bg-rose-50 font-medium">💰 Sort by: ราคาสูงสุดก่อน</button>
+                      <button type="button" onclick="toggleListAutoSort('${list.id}')" class="w-full text-left px-3.5 py-2 hover:bg-rose-50 font-medium text-amber-800">
+                        ${list.autoSort ? '✓ ปิดเรียงเวลาอัตโนมัติ' : '⚡ เปิดเรียงเวลาอัตโนมัติ'}
+                      </button>
+                      <div class="border-t border-stone-100 my-1"></div>
+                      <button type="button" onclick="archiveAllCardsInList('${list.id}')" class="w-full text-left px-3.5 py-2 hover:bg-amber-50 font-semibold text-amber-900">
+                        📦 Archive all cards in this list (เก็บ/ลบการ์ดทั้งหมดในช่องนี้)
+                      </button>
+                      <button type="button" onclick="confirmDeleteList('${list.id}')" class="w-full text-left px-3.5 py-2 hover:bg-rose-50 font-semibold text-rose-700">
+                        🗑️ Delete list (ลบช่องนี้)
+                      </button>
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto custom-scroll py-2.5 space-y-2.5 pr-0.5">
+              ${visibleCards.length ? visibleCards.map(card => renderCardItem(card, list.id)).join('') : `
+                <div class="py-8 text-center text-xs opacity-45 border border-dashed border-stone-400/40 rounded-2xl">
+                  ยังไม่มีการ์ดในช่องนี้
+                </div>
+              `}
+            </div>
+
+            <button type="button" onclick="openCardModal(null, '${list.id}')" class="mt-2 w-full py-2.5 px-3 rounded-2xl btn-soft text-xs font-semibold flex items-center justify-center gap-1.5">
+              <span>+ Add a card</span>
+            </button>
+          </div>
+        `;
+      }).join('') + `
+        <button type="button" onclick="addNewList()" class="w-72 shrink-0 p-4 rounded-3xl bg-white/55 hover:bg-white/85 border border-dashed border-stone-800/20 text-xs font-bold flex items-center justify-center gap-2 transition">
+          <span>+ เพิ่มช่องใหม่ (Add another list)</span>
+        </button>
+      `;
+    }
+
+    function renderCardItem(card, listId) {
+      const adm = getAdminById(card.adminId);
+      const dueSoon = isCardDueSoon(card);
+      const isPickup = card.fulfillment === 'รับเอง';
+      const lockOwner = state.editingLocks && state.editingLocks[card.id];
+
+      return `
+        <div draggable="true"
+             ondragstart="handleCardDragStart(event, '${card.id}', '${listId}')"
+             ondragover="handleCardDragOver(event)"
+             ondragleave="handleCardDragLeave(event)"
+             ondrop="handleCardDrop(event, '${card.id}', '${listId}')"
+             onclick="openCardModal('${card.id}', '${listId}')"
+             class="p-3.5 rounded-2xl bg-white/95 hover:bg-white border border-stone-800/10 shadow-2xs cursor-pointer transition space-y-2.5 group ${dueSoon ? 'due-alert-card' : ''}">
+          ${lockOwner ? `
+            <div class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 inline-block">
+              ✍️ ${escapeHtml(lockOwner)} กำลังแก้ไข...
+            </div>
+          ` : ''}
+
+          <div class="flex items-start justify-between gap-2">
+            <span class="font-bold text-xs tracking-tight text-stone-900 leading-snug">${escapeHtml(card.orderCode)}</span>
+            <div class="flex items-center gap-1 shrink-0">
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-700 font-medium">${adm.avatar} ${escapeHtml(adm.name)}</span>
+              <button type="button" onclick="deleteSingleCard(event, '${card.id}', '${listId}')" title="ลบการ์ดนี้" class="px-1.5 py-0.5 rounded-lg text-[11px] text-stone-400 hover:text-rose-700 hover:bg-rose-50 transition">
+                🗑️
+              </button>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+            <span class="px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-200/80 text-amber-950 font-semibold">
+              👤 ${escapeHtml(card.customer || 'ไม่ระบุชื่อ')}
+            </span>
+            <span class="px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200/80 text-emerald-950 font-bold">
+              💰 ${formatCurrency(card.price)}
+            </span>
+            <span class="px-2 py-0.5 rounded-lg font-semibold ${isPickup ? 'bg-teal-100/80 text-teal-900' : 'bg-sky-100/80 text-sky-900'}">
+              ${isPickup ? '🛍️ รับเอง' : '🚚 จัดส่ง'}
+            </span>
+          </div>
+
+          <div class="flex items-center justify-between pt-1 border-t border-stone-100 text-[11px]">
+            <span class="font-semibold ${dueSoon ? 'text-rose-700' : 'text-stone-600'}">
+              ${dueSoon ? '⏰ ใกล้ถึงเวลา!' : '🕒'} ${formatThaiDateTime(card.dueAt)}
+            </span>
+            <span class="text-[10px] opacity-55">เตือน ${card.reminderValue || 2} ${card.reminderUnit === 'days' ? 'วัน' : 'ชม.'}</span>
+          </div>
+
+          ${card.lastActionSummary ? `
+            <div class="text-[10px] text-stone-500 bg-stone-50/90 px-2 py-1 rounded-lg truncate" title="${escapeHtml(card.lastActionSummary)}">
+              🕒 ${escapeHtml(card.lastActionSummary)}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function updateListTitle(listId, newTitle) {
+      const list = state.lists.find(l => l.id === listId);
+      if (!list || !newTitle.trim()) return;
+      const oldTitle = list.title;
+      list.title = newTitle.trim();
+      if (oldTitle !== list.title) {
+        logTeamAction(`เปลี่ยนชื่อช่องเป็น "${list.title}"`);
+      }
+      saveState();
+    }
+
+    function toggleListMenu(event, listId) {
+      event.stopPropagation();
+      openMenuListId = openMenuListId === listId ? null : listId;
+      renderBoard();
+    }
+
+    function closeListMenu() {
+      openMenuListId = null;
+    }
+
+    function addNewList() {
+      const idx = state.lists.length + 1;
+      const newTitle = `${idx}-ช่องงานใหม่ (คลิกเพื่อพิมพ์แก้ไขชื่อ)`;
+      state.lists.push({
+        id: 'list_' + Date.now(),
+        title: newTitle,
+        autoSort: false,
+        cards: []
+      });
+      logTeamAction(`เพิ่มช่องใหม่ "${newTitle}"`);
+      saveState();
+      renderBoard();
+      showToast('เพิ่มช่องใหม่เรียบร้อย', 'info');
+    }
+
+    function copyList(listId) {
+      closeListMenu();
+      const src = state.lists.find(l => l.id === listId);
+      if (!src) return;
+      const cloned = {
+        id: 'list_' + Date.now(),
+        title: src.title + ' (สำเนา)',
+        autoSort: src.autoSort,
+        cards: src.cards.map((c, i) => ({
+          ...JSON.parse(JSON.stringify(c)),
+          id: 'card_' + Date.now() + '_' + i
+        }))
+      };
+      const idx = state.lists.findIndex(l => l.id === listId);
+      state.lists.splice(idx + 1, 0, cloned);
+      logTeamAction(`คัดลอกช่อง "${src.title}" (${src.cards.length} การ์ด)`);
+      saveState();
+      renderBoard();
+      showToast('คัดลอกช่องเรียบร้อย', 'info');
+    }
+
+    function moveListStep(listId, dir) {
+      const idx = state.lists.findIndex(l => l.id === listId);
+      const targetIdx = idx + dir;
+      if (idx < 0 || targetIdx < 0 || targetIdx >= state.lists.length) return;
+      const [moved] = state.lists.splice(idx, 1);
+      state.lists.splice(targetIdx, 0, moved);
+      logTeamAction(`ย้ายตำแหน่งช่อง "${moved.title}" ไปลำดับที่ ${targetIdx + 1}`);
+      saveState();
+      renderBoard();
+    }
+
+    function sortListCards(listId, mode) {
+      closeListMenu();
+      const list = state.lists.find(l => l.id === listId);
+      if (!list) return;
+      if (mode === 'dueAsc') list.cards.sort((a, b) => new Date(a.dueAt) - new Date(b.dueAt));
+      if (mode === 'dueDesc') list.cards.sort((a, b) => new Date(b.dueAt) - new Date(a.dueAt));
+      if (mode === 'priceDesc') list.cards.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
+      saveState();
+      renderBoard();
+      showToast('เรียงลำดับการ์ดในช่องแล้ว', 'info');
+    }
+
+    function toggleListAutoSort(listId) {
+      closeListMenu();
+      const list = state.lists.find(l => l.id === listId);
+      if (!list) return;
+      list.autoSort = !list.autoSort;
+      saveState();
+      renderBoard();
+      showToast(list.autoSort ? 'เปิดการเรียงเวลาอัตโนมัติแล้ว' : 'ปิดการเรียงเวลาอัตโนมัติแล้ว', 'info');
+    }
+
+    async function archiveAllCardsInList(listId) {
+      closeListMenu();
+      const list = state.lists.find(l => l.id === listId);
+      if (!list) return;
+      if (!list.cards.length) {
+        showToast('ไม่มีการ์ดในช่องนี้ให้เก็บเข้ากรุ', 'warn');
+        return;
+      }
+      const ok = await openConfirmModal(
+        'Archive all cards in this list',
+        `ต้องการเก็บ/ลบการ์ดทั้งหมด ${list.cards.length} ใบ ในช่อง "${list.title}" ใช่หรือไม่? (สามารถกู้คืนภายหลังได้ที่ปุ่ม การ์ดที่เก็บเข้ากรุ)`
+      );
+      if (!ok) return;
+
+      const count = list.cards.length;
+      const nowStr = new Date().toLocaleString('th-TH');
+      state.archivedCards = state.archivedCards || [];
+      list.cards.forEach(c => {
+        state.archivedCards.unshift({
+          ...c,
+          archivedFromListId: list.id,
+          archivedFromListTitle: list.title,
+          archivedAt: nowStr
+        });
+      });
+      list.cards = [];
+      logTeamAction(`เก็บการ์ดทั้งหมดในช่อง "${list.title}" เข้ากรุ (${count} ใบ)`);
+      saveState();
+      renderBoard();
+      showToast(`เก็บการ์ดทั้งหมด ${count} ใบเข้ากรุเรียบร้อย`, 'info');
+    }
+
+    async function deleteSingleCard(event, cardId, listId) {
+      event.stopPropagation();
+      const list = state.lists.find(l => l.id === listId);
+      if (!list) return;
+      const card = list.cards.find(c => c.id === cardId);
+      if (!card) return;
+
+      const ok = await openConfirmModal(
+        'ยืนยันการลบการ์ดออเดอร์',
+        `ต้องการลบการ์ด "${card.orderCode} (${card.customer || 'ไม่ระบุชื่อ'})" ออกจากช่องนี้ใช่หรือไม่?`
+      );
+      if (!ok) return;
+
+      list.cards = list.cards.filter(c => c.id !== cardId);
+      logTeamAction(`ลบการ์ด ${card.orderCode} (${card.customer || 'ไม่ระบุชื่อ'}) ออกจากช่อง "${list.title}"`, card.orderCode);
+      saveState();
+      renderBoard();
+      runReminderCheck(false);
+      showToast(`ลบการ์ด ${card.orderCode} เรียบร้อย`, 'info');
+    }
+
+    async function confirmDeleteList(listId) {
+      closeListMenu();
+      if (state.lists.length <= 1) {
+        showToast('ต้องเหลือช่องงานไว้อย่างน้อย 1 ช่อง', 'warn');
+        return;
+      }
+      const list = state.lists.find(l => l.id === listId);
+      const ok = await openConfirmModal(
+        'ยืนยันการลบช่องงาน',
+        `ต้องการลบช่อง "${list.title}" และการ์ดทั้งหมดภายในช่องนี้ (${list.cards.length} ใบ) ใช่หรือไม่?`
+      );
+      if (!ok) return;
+      state.lists = state.lists.filter(l => l.id !== listId);
+      logTeamAction(`ลบช่อง "${list.title}" (${list.cards.length} การ์ด)`);
+      saveState();
+      renderBoard();
+      showToast('ลบช่องงานเรียบร้อย', 'info');
+    }
+
+    // Drag & Drop (Cards & Lists)
+    function handleCardDragStart(e, cardId, fromListId) {
+      e.stopPropagation();
+      draggedCardInfo = { cardId, fromListId };
+      draggedListId = null;
+      e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleListDragStart(e, listId) {
+      if (draggedCardInfo) return;
+      draggedListId = listId;
+      e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleColumnDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('drag-over-col');
+    }
+
+    function handleColumnDragLeave(e) {
+      e.currentTarget.classList.remove('drag-over-col');
+    }
+
+    function handleCardDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('drag-over-card');
+    }
+
+    function handleCardDragLeave(e) {
+      e.currentTarget.classList.remove('drag-over-card');
+    }
+
+    function handleCardDrop(e, targetCardId, targetListId) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.currentTarget.classList.remove('drag-over-card');
+      if (!draggedCardInfo) return;
+
+      const { cardId, fromListId } = draggedCardInfo;
+      draggedCardInfo = null;
+      if (cardId === targetCardId && fromListId === targetListId) return;
+
+      const fromList = state.lists.find(l => l.id === fromListId);
+      const toList = state.lists.find(l => l.id === targetListId);
+      if (!fromList || !toList) return;
+
+      const cardIdx = fromList.cards.findIndex(c => c.id === cardId);
+      if (cardIdx < 0) return;
+      const [movedCard] = fromList.cards.splice(cardIdx, 1);
+
+      const targetIdx = toList.cards.findIndex(c => c.id === targetCardId);
+      toList.cards.splice(targetIdx >= 0 ? targetIdx : toList.cards.length, 0, movedCard);
+
+      if (fromListId !== targetListId) {
+        logTeamAction(`ย้ายการ์ด ${movedCard.orderCode} จาก "${fromList.title.slice(0, 26)}..." ไป "${toList.title.slice(0, 26)}..."`, movedCard.orderCode, movedCard);
+      } else {
+        logTeamAction(`จัดลำดับการ์ด ${movedCard.orderCode} ใหม่ในช่อง "${toList.title.slice(0, 26)}..."`, movedCard.orderCode, movedCard);
+      }
+
+      saveState();
+      renderBoard();
+    }
+
+    function handleColumnDrop(e, targetListId) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('drag-over-col');
+
+      if (draggedCardInfo) {
+        const { cardId, fromListId } = draggedCardInfo;
+        draggedCardInfo = null;
+        const fromList = state.lists.find(l => l.id === fromListId);
+        const toList = state.lists.find(l => l.id === targetListId);
+        if (!fromList || !toList) return;
+        const cardIdx = fromList.cards.findIndex(c => c.id === cardId);
+        if (cardIdx < 0) return;
+        const [movedCard] = fromList.cards.splice(cardIdx, 1);
+        toList.cards.push(movedCard);
+        if (fromListId !== targetListId) {
+          logTeamAction(`ย้ายการ์ด ${movedCard.orderCode} จาก "${fromList.title.slice(0, 26)}..." ไป "${toList.title.slice(0, 26)}..."`, movedCard.orderCode, movedCard);
+        }
+        saveState();
+        renderBoard();
+        return;
+      }
+
+      if (draggedListId && draggedListId !== targetListId) {
+        const fromIdx = state.lists.findIndex(l => l.id === draggedListId);
+        const toIdx = state.lists.findIndex(l => l.id === targetListId);
+        draggedListId = null;
+        if (fromIdx < 0 || toIdx < 0) return;
+        const [movedList] = state.lists.splice(fromIdx, 1);
+        state.lists.splice(toIdx, 0, movedList);
+        logTeamAction(`ลากย้ายตำแหน่งช่อง "${movedList.title}"`);
+        saveState();
+        renderBoard();
+      }
+    }
+
+    // Card Modal (Create / Edit / Smart Parse / Image Paste)
+    function openQuickNewCard() {
+      const firstList = state.lists[0];
+      if (!firstList) return;
+      openCardModal(null, firstList.id);
+    }
+
+    function openCardModal(cardId, listId) {
+      renderAdminSelectors();
+      const list = state.lists.find(l => l.id === listId) || state.lists[0];
+      const existing = cardId ? list.cards.find(c => c.id === cardId) : null;
+
+      document.getElementById('modalCardId').value = existing ? existing.id : '';
+      document.getElementById('modalListId').value = list.id;
+      document.getElementById('cardModalHeading').textContent = existing ? `แก้ไขการ์ด ${existing.orderCode}` : `เพิ่มการ์ดใหม่ใน: ${list.title.slice(0, 32)}...`;
+
+      const lockBanner = document.getElementById('cardModalLockBanner');
+      if (existing) {
+        const activeAdm = getAdminById(state.activeAdminId);
+        state.editingLocks = state.editingLocks || {};
+        state.editingLocks[existing.id] = activeAdm.name;
+        lockBanner.textContent = `🔒 กำลังแก้ไขโดย: ${activeAdm.name}`;
+        lockBanner.classList.remove('hidden');
+      } else {
+        lockBanner.classList.add('hidden');
+      }
+
+      document.getElementById('cardRawTemplate').value = existing ? (existing.rawTemplate || '') : '';
+      document.getElementById('cardOrderCode').value = existing ? existing.orderCode : generateNextOrderCode();
+      document.getElementById('cardAdminSelect').value = existing ? existing.adminId : state.activeAdminId;
+      document.getElementById('cardCustomerName').value = existing ? (existing.customer || '') : '';
+      document.getElementById('cardPrice').value = existing ? Number(existing.price || 0) : '';
+      document.getElementById('cardFulfillment').value = existing ? (existing.fulfillment || 'รับเอง') : 'รับเอง';
+
+      const defaultDue = new Date(Date.now() + 3 * 3600000);
+      document.getElementById('cardDueDateTime').value = existing ? existing.dueAt : formatLocalDateTimeInput(defaultDue);
+      document.getElementById('cardReminderValue').value = existing ? (existing.reminderValue || 2) : 2;
+      document.getElementById('cardReminderUnit').value = existing ? (existing.reminderUnit || 'hours') : 'hours';
+
+      pendingCardImage = existing ? (existing.imageDataUrl || '') : '';
+      syncCardImagePreview();
+
+      const activitySec = document.getElementById('cardActivitySection');
+      const activityList = document.getElementById('cardActivityList');
+      if (existing && Array.isArray(existing.logs) && existing.logs.length) {
+        activitySec.classList.remove('hidden');
+        activityList.innerHTML = existing.logs.map(l => `<div>• ${escapeHtml(l)}</div>`).join('');
+      } else {
+        activitySec.classList.add('hidden');
+      }
+
+      document.getElementById('deleteCardModalBtn').classList.toggle('hidden', !existing);
+      document.getElementById('archiveCardModalBtn').classList.toggle('hidden', !existing);
+      document.getElementById('cardModal').classList.remove('hidden');
+    }
+
+    function closeCardModal() {
+      const cardId = document.getElementById('modalCardId').value;
+      if (cardId && state.editingLocks && state.editingLocks[cardId]) {
+        delete state.editingLocks[cardId];
+      }
+      document.getElementById('cardModal').classList.add('hidden');
+    }
+
+    function parseTemplateIntoFields(notifyUser) {
+      const raw = document.getElementById('cardRawTemplate').value;
+      const parsed = parseOrderTemplateText(raw);
+      if (parsed.orderCode) document.getElementById('cardOrderCode').value = parsed.orderCode;
+      if (parsed.customer) document.getElementById('cardCustomerName').value = parsed.customer;
+      if (parsed.price !== null) document.getElementById('cardPrice').value = parsed.price;
+      if (parsed.fulfillment) document.getElementById('cardFulfillment').value = parsed.fulfillment;
+      if (notifyUser) {
+        showToast('ดึงชื่อลูกค้า ราคา และประเภทการรับสินค้าจากเทมเพลตแล้ว', 'info');
+      }
+    }
+
+    function syncCardImagePreview() {
+      const wrap = document.getElementById('cardImagePreviewWrap');
+      const img = document.getElementById('cardImagePreview');
+      if (pendingCardImage) {
+        img.src = pendingCardImage;
+        wrap.classList.remove('hidden');
+      } else {
+        img.removeAttribute('src');
+        wrap.classList.add('hidden');
+      }
+    }
+
+    function handleCardImageUpload(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        pendingCardImage = reader.result;
+        syncCardImagePreview();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearCardImage() {
+      pendingCardImage = '';
+      syncCardImagePreview();
+    }
+
+    function saveCardFromModal(e) {
+      e.preventDefault();
+      const cardId = document.getElementById('modalCardId').value;
+      const listId = document.getElementById('modalListId').value;
+      const list = state.lists.find(l => l.id === listId);
+      if (!list) return;
+
+      const payload = {
+        orderCode: document.getElementById('cardOrderCode').value.trim(),
+        adminId: document.getElementById('cardAdminSelect').value,
+        customer: document.getElementById('cardCustomerName').value.trim() || 'ลูกค้าทั่วไป',
+        price: Number(document.getElementById('cardPrice').value || 0),
+        fulfillment: document.getElementById('cardFulfillment').value,
+        dueAt: document.getElementById('cardDueDateTime').value,
+        reminderValue: Number(document.getElementById('cardReminderValue').value || 2),
+        reminderUnit: document.getElementById('cardReminderUnit').value,
+        rawTemplate: document.getElementById('cardRawTemplate').value,
+        imageDataUrl: pendingCardImage
+      };
+
+      if (cardId) {
+        const idx = list.cards.findIndex(c => c.id === cardId);
+        if (idx >= 0) {
+          const prev = list.cards[idx];
+          const changes = [];
+          if (prev.dueAt !== payload.dueAt) {
+            changes.push(`ปรับวัน/เวลาเป็น ${formatThaiDateTime(payload.dueAt)}`);
+          }
+          if (Number(prev.price || 0) !== payload.price) {
+            changes.push(`แก้ราคาเป็น ${formatCurrency(payload.price)}`);
+          }
+          if (prev.customer !== payload.customer) {
+            changes.push(`แก้ชื่อลูกค้าเป็น ${payload.customer}`);
+          }
+          if (prev.fulfillment !== payload.fulfillment) {
+            changes.push(`เปลี่ยนประเภทเป็น ${payload.fulfillment}`);
+          }
+          const actionSummary = changes.length
+            ? `แก้ไขการ์ด ${payload.orderCode} (${changes.join(', ')})`
+            : `อัปเดตรายละเอียดการ์ด ${payload.orderCode}`;
+
+          const updatedCard = {
+            ...prev,
+            ...payload,
+            logs: [...(prev.logs || [])]
+          };
+          logTeamAction(actionSummary, payload.orderCode, updatedCard);
+          list.cards[idx] = updatedCard;
+        }
+      } else {
+        const newCard = {
+          id: 'card_' + Date.now(),
+          ...payload,
+          logs: []
+        };
+        logTeamAction(
+          `ลงออเดอร์ใหม่ ${payload.orderCode} (${payload.customer} · ${formatCurrency(payload.price)}) ในช่อง "${list.title.slice(0, 24)}..."`,
+          payload.orderCode,
+          newCard
+        );
+        list.cards.unshift(newCard);
+      }
+
+      closeCardModal();
+      saveState();
+      runReminderCheck(false);
+      if (state.activeRoute === 'board') renderBoard();
+      if (state.activeRoute === 'dashboard') renderDashboard();
+      showToast('บันทึกข้อมูลการ์ดเรียบร้อย', 'info');
+    }
+
+    async function deleteCurrentModalCard() {
+      const cardId = document.getElementById('modalCardId').value;
+      const listId = document.getElementById('modalListId').value;
+      if (!cardId) return;
+      const ok = await openConfirmModal('ยืนยันการลบการ์ด', 'ต้องการลบการ์ดออเดอร์นี้ออกจากระบบใช่หรือไม่?');
+      if (!ok) return;
+      const list = state.lists.find(l => l.id === listId);
+      if (list) {
+        const target = list.cards.find(c => c.id === cardId);
+        list.cards = list.cards.filter(c => c.id !== cardId);
+        if (target) {
+          logTeamAction(`ลบการ์ด ${target.orderCode} (${target.customer || 'ไม่ระบุชื่อ'}) ออกจากช่อง "${list.title}"`, target.orderCode);
+        }
+      }
+      closeCardModal();
+      saveState();
+      renderBoard();
+      showToast('ลบการ์ดเรียบร้อย', 'info');
+    }
+
+    function archiveCurrentModalCard() {
+      const cardId = document.getElementById('modalCardId').value;
+      const listId = document.getElementById('modalListId').value;
+      const list = state.lists.find(l => l.id === listId);
+      if (!list) return;
+      const idx = list.cards.findIndex(c => c.id === cardId);
+      if (idx < 0) return;
+      const [card] = list.cards.splice(idx, 1);
+      state.archivedCards = state.archivedCards || [];
+      logTeamAction(`เก็บการ์ด ${card.orderCode} เข้ากรุจากช่อง "${list.title}"`, card.orderCode, card);
+      state.archivedCards.unshift({
+        ...card,
+        archivedFromListId: list.id,
+        archivedFromListTitle: list.title,
+        archivedAt: new Date().toLocaleString('th-TH')
+      });
+      closeCardModal();
+      saveState();
+      renderBoard();
+      showToast('เก็บการ์ดเข้ากรุเรียบร้อย', 'info');
+    }
+
+    function openArchiveModal() {
+      const listEl = document.getElementById('archiveModalList');
+      const items = state.archivedCards || [];
+      if (!items.length) {
+        listEl.innerHTML = `<div class="py-8 text-center text-stone-400">ยังไม่มีการ์ดที่เก็บเข้ากรุ</div>`;
+      } else {
+        listEl.innerHTML = items.map((c, idx) => `
+          <div class="p-3 rounded-2xl bg-white/80 border border-stone-200 flex items-center justify-between gap-2">
+            <div>
+              <div class="font-bold">${escapeHtml(c.orderCode)} · ${escapeHtml(c.customer)} (${formatCurrency(c.price)})</div>
+              <div class="text-[11px] text-stone-500">จากช่อง: ${escapeHtml(c.archivedFromListTitle || '-')} · เก็บเมื่อ ${escapeHtml(c.archivedAt || '')}</div>
+            </div>
+            <button type="button" onclick="restoreArchivedCard(${idx})" class="px-3 py-1.5 rounded-xl btn-soft font-semibold shrink-0">↩️ กู้คืน</button>
+          </div>
+        `).join('');
+      }
+      document.getElementById('archiveModal').classList.remove('hidden');
+    }
+
+    function closeArchiveModal() {
+      document.getElementById('archiveModal').classList.add('hidden');
+    }
+
+    function restoreArchivedCard(idx) {
+      const items = state.archivedCards || [];
+      const [card] = items.splice(idx, 1);
+      if (!card) return;
+      const targetList = state.lists.find(l => l.id === card.archivedFromListId) || state.lists[0];
+      logTeamAction(`กู้คืนการ์ด ${card.orderCode} กลับไปยังช่อง "${targetList.title}"`, card.orderCode, card);
+      targetList.cards.unshift(card);
+      saveState();
+      openArchiveModal();
+      renderBoard();
+      showToast(`กู้คืนการ์ด ${card.orderCode} กลับไปยังบอร์ดแล้ว`, 'info');
+    }
+
+    async function clearAllArchivedCards() {
+      if (!(state.archivedCards || []).length) return;
+      const ok = await openConfirmModal('ล้างประวัติกรุทั้งหมด', 'ต้องการลบการ์ดทั้งหมดในกรุอย่างถาวรใช่หรือไม่?');
+      if (!ok) return;
+      const count = state.archivedCards.length;
+      state.archivedCards = [];
+      logTeamAction(`ล้างการ์ดในกรุถาวรทั้งหมด (${count} ใบ)`);
+      saveState();
+      openArchiveModal();
+      renderBoard();
+      showToast('ล้างการ์ดในกรุเรียบร้อย', 'info');
+    }
+
+    function openTeamActivityModal() {
+      const filterSel = document.getElementById('teamActivityAdminFilter');
+      if (filterSel) {
+        filterSel.innerHTML = `<option value="all">👥 แอดมินทุกคน</option>` + getAdminsList().map(a =>
+          `<option value="${a.id}">${a.avatar} ${escapeHtml(a.name)} ${a.email ? `(${escapeHtml(a.email)})` : ''}</option>`
+        ).join('');
+      }
+      renderTeamActivityList();
+      document.getElementById('teamActivityModal').classList.remove('hidden');
+    }
+
+    function closeTeamActivityModal() {
+      document.getElementById('teamActivityModal').classList.add('hidden');
+    }
+
+    function renderTeamActivityList() {
+      const listEl = document.getElementById('teamActivityModalList');
+      const filterVal = document.getElementById('teamActivityAdminFilter')?.value || 'all';
+      const logs = (state.teamLogs || []).filter(l => filterVal === 'all' || l.adminId === filterVal);
+
+      if (!logs.length) {
+        listEl.innerHTML = `<div class="py-10 text-center text-stone-400">ยังไม่มีประวัติการทำงานของแอดมิน</div>`;
+        return;
+      }
+
+      listEl.innerHTML = logs.slice(0, 150).map(log => `
+        <div class="p-3 rounded-2xl bg-white/85 border border-stone-200/80 flex items-start justify-between gap-3">
+          <div class="space-y-0.5">
+            <div class="font-semibold text-stone-900">
+              <span class="text-rose-800">แอดมิน${escapeHtml(log.adminName)}</span>
+              ${log.adminEmail ? `<span class="text-[11px] font-normal text-stone-400">(${escapeHtml(log.adminEmail)})</span>` : ''}
+            </div>
+            <div class="text-stone-700">${escapeHtml(log.action)}</div>
+          </div>
+          <span class="text-[11px] text-stone-400 shrink-0 font-medium">${escapeHtml(log.time)}</span>
+        </div>
+      `).join('');
+    }
+
+    // VIEW 3: SALES SHEET
+    function getAdminSalesFromRow(row, adminId) {
+      if (row && row.adminSales && typeof row.adminSales === 'object' && row.adminSales[adminId] !== undefined) {
+        return Number(row.adminSales[adminId] || 0);
+      }
+      if (adminId === 'admin_pum') return Number(row.pumSales || 0);
+      if (adminId === 'admin_kungking') return Number(row.kungkingSales || 0);
+      return 0;
+    }
+
+    function renderSalesSheet() {
+      const container = document.getElementById('view-sales');
+      const admins = getAdminsList();
+      const rows = state.salesRows.filter(r => {
+        if (!state.searchQuery) return true;
+        const adminCodes = admins.map(a => (r.adminCodes && r.adminCodes[a.id]) || '').join(' ');
+        const hay = `${r.date} ${r.orderCodes} ${r.pumOrderCode || ''} ${r.kungkingOrderCode || ''} ${adminCodes} ${r.refundNote}`.toLowerCase();
+        return hay.includes(state.searchQuery);
+      });
+
+      const totals = rows.reduce((acc, r) => {
+        acc.orderCount += Number(r.orderCount || 0);
+        acc.totalSales += Number(r.totalSales || 0);
+        acc.refundAmount += Number(r.refundAmount || 0);
+        admins.forEach(adm => {
+          acc.byAdmin[adm.id] = (acc.byAdmin[adm.id] || 0) + getAdminSalesFromRow(r, adm.id);
+        });
+        return acc;
+      }, { orderCount: 0, totalSales: 0, refundAmount: 0, byAdmin: {} });
+
+      container.innerHTML = `
+        <div class="glass-panel p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+          <div class="space-y-0.5">
+            <h3 class="font-bold text-base">ตารางสรุปยอดขายประจำวัน & ยอดแยกตามแอดมิน</h3>
+            <p class="text-xs opacity-65">รองรับการซิงก์ออเดอร์จากบอร์ดอัตโนมัติ หักยอดคืนเงิน และส่งออกไฟล์ CSV</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="syncBoardOrdersToSalesSheet()" class="btn-accent px-4 py-2 rounded-2xl text-xs font-semibold shadow-2xs">
+              🔄 ซิงก์ยอดจากบอร์ดเข้าตาราง
+            </button>
+            <button type="button" onclick="addSalesSheetRow()" class="btn-soft px-3.5 py-2 rounded-2xl text-xs font-semibold">
+              + เพิ่มแถววันที่
+            </button>
+            <button type="button" onclick="exportSalesCSV()" class="btn-soft px-3.5 py-2 rounded-2xl text-xs font-semibold">
+              ⬇️ Export CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="glass-panel overflow-hidden">
+          <div class="overflow-x-auto custom-scroll">
+            <table class="w-full text-xs text-left border-collapse min-w-[1040px]">
+              <thead>
+                <tr class="border-b border-stone-800/10 bg-white/75 font-bold">
+                  <th class="py-3 px-3 text-center w-12">NO</th>
+                  <th class="py-3 px-3 bg-sky-50/80">ว/ด/ป</th>
+                  <th class="py-3 px-3 text-center bg-teal-50/80">จำนวนออเดอร์</th>
+                  <th class="py-3 px-3 text-right bg-indigo-50/80">ยอดขายรวม</th>
+                  <th class="py-3 px-3 text-rose-800 bg-rose-50/70">หากคืนค่า/โอนเงินคืนลูกค้า (ระบุเหตุผล)</th>
+                  <th class="py-3 px-3 text-right bg-rose-50/70">ยอดหักคืน (฿)</th>
+                  <th class="py-3 px-3 bg-purple-50/70">รหัสออเดอร์</th>
+                  ${admins.map((adm, idx) => `
+                    <th class="py-3 px-3 text-right ${idx % 2 === 0 ? 'bg-emerald-50/80' : 'bg-amber-50/80'}">${adm.avatar} ยอดขาย ${escapeHtml(adm.name)}</th>
+                  `).join('')}
+                  <th class="py-3 px-2 text-center w-12">ลบ</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-stone-800/5 bg-white/60">
+                ${rows.length ? rows.map((row, idx) => `
+                  <tr class="hover:bg-white/95 transition">
+                    <td class="py-2.5 px-3 text-center font-semibold opacity-60">${idx + 1}</td>
+                    <td class="py-2 px-3">
+                      <input type="date" value="${escapeHtml(row.date)}" onchange="updateSalesRowField('${row.id}', 'date', this.value)" class="rounded-lg bg-transparent border border-stone-200 px-2 py-1 font-medium" />
+                    </td>
+                    <td class="py-2 px-3 text-center">
+                      <input type="number" min="0" value="${Number(row.orderCount || 0)}" onchange="updateSalesRowField('${row.id}', 'orderCount', Number(this.value))" class="w-16 text-center rounded-lg bg-transparent border border-stone-200 px-2 py-1 font-semibold" />
+                    </td>
+                    <td class="py-2 px-3 text-right">
+                      <input type="number" min="0" value="${Number(row.totalSales || 0)}" onchange="updateSalesRowField('${row.id}', 'totalSales', Number(this.value))" class="w-28 text-right rounded-lg bg-transparent border border-stone-200 px-2 py-1 font-bold text-stone-900" />
+                    </td>
+                    <td class="py-2 px-3">
+                      <input type="text" value="${escapeHtml(row.refundNote || '')}" placeholder="ระบุหมายเหตุคืนเงิน..." onchange="updateSalesRowField('${row.id}', 'refundNote', this.value)" class="w-full rounded-lg bg-transparent border border-stone-200 px-2 py-1 text-rose-800" />
+                    </td>
+                    <td class="py-2 px-3 text-right">
+                      <input type="number" min="0" value="${Number(row.refundAmount || 0)}" onchange="updateSalesRowField('${row.id}', 'refundAmount', Number(this.value))" class="w-24 text-right rounded-lg bg-transparent border border-stone-200 px-2 py-1 text-rose-700 font-semibold" />
+                    </td>
+                    <td class="py-2 px-3">
+                      <input type="text" value="${escapeHtml(row.orderCodes || '')}" onchange="updateSalesRowField('${row.id}', 'orderCodes', this.value)" class="w-40 rounded-lg bg-transparent border border-stone-200 px-2 py-1 font-mono text-[11px]" />
+                    </td>
+                    ${admins.map(adm => `
+                      <td class="py-2 px-3 text-right">
+                        <input type="number" min="0" value="${getAdminSalesFromRow(row, adm.id)}" onchange="updateSalesRowAdminAmount('${row.id}', '${adm.id}', Number(this.value))" class="w-24 text-right rounded-lg bg-transparent border border-stone-200 px-2 py-1 font-semibold" />
+                      </td>
+                    `).join('')}
+                    <td class="py-2 px-2 text-center">
+                      <button type="button" onclick="deleteSalesRow('${row.id}')" class="p-1.5 rounded-lg hover:bg-rose-100 text-rose-700" title="ลบแถวนี้">🗑️</button>
+                    </td>
+                  </tr>
+                `).join('') : `
+                  <tr>
+                    <td colspan="${8 + admins.length}" class="py-10 text-center text-xs text-stone-400">
+                      ยังไม่มีข้อมูลในตารางยอดขาย — กด "+ เพิ่มแถววันที่" หรือกด "🔄 ซิงก์ยอดจากบอร์ดเข้าตาราง" ได้เลย
+                    </td>
+                  </tr>
+                `}
+              </tbody>
+              <tfoot>
+                <tr class="border-t-2 border-stone-800/15 bg-stone-900 text-white font-bold">
+                  <td colspan="2" class="py-3.5 px-4">รวมทั้งหมด (ยอดสุทธิ: ${formatCurrency(totals.totalSales - totals.refundAmount)})</td>
+                  <td class="py-3.5 px-3 text-center">${totals.orderCount} ออเดอร์</td>
+                  <td class="py-3.5 px-3 text-right">${formatCurrency(totals.totalSales)}</td>
+                  <td class="py-3.5 px-3 text-rose-200 font-normal">รวมยอดหักคืนเงินทั้งหมด</td>
+                  <td class="py-3.5 px-3 text-right text-rose-300">-${formatCurrency(totals.refundAmount)}</td>
+                  <td class="py-3.5 px-3"></td>
+                  ${admins.map(adm => `
+                    <td class="py-3.5 px-3 text-right">${formatCurrency(totals.byAdmin[adm.id] || 0)}</td>
+                  `).join('')}
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateSalesRowField(rowId, field, val) {
+      const row = state.salesRows.find(r => r.id === rowId);
+      if (!row) return;
+      row[field] = val;
+      saveState();
+      renderSalesSheet();
+    }
+
+    function updateSalesRowAdminAmount(rowId, adminId, val) {
+      const row = state.salesRows.find(r => r.id === rowId);
+      if (!row) return;
+      row.adminSales = row.adminSales || {};
+      row.adminSales[adminId] = Number(val || 0);
+      if (adminId === 'admin_pum') row.pumSales = Number(val || 0);
+      if (adminId === 'admin_kungking') row.kungkingSales = Number(val || 0);
+      row.totalSales = getAdminsList().reduce((sum, adm) => sum + getAdminSalesFromRow(row, adm.id), 0);
+      saveState();
+      renderSalesSheet();
+    }
+
+    function addSalesSheetRow() {
+      const today = new Date().toISOString().slice(0, 10);
+      const adminSales = {};
+      getAdminsList().forEach(adm => { adminSales[adm.id] = 0; });
+      state.salesRows.push({
+        id: 'sr_' + Date.now(),
+        date: today,
+        orderCount: 0,
+        totalSales: 0,
+        refundNote: '',
+        refundAmount: 0,
+        orderCodes: '',
+        adminSales,
+        pumSales: 0,
+        kungkingSales: 0
+      });
+      saveState();
+      renderSalesSheet();
+      showToast('เพิ่มแถววันที่ใหม่ในตารางยอดขายแล้ว', 'info');
+    }
+
+    async function deleteSalesRow(rowId) {
+      const ok = await openConfirmModal('ยืนยันการลบแถวสรุปยอด', 'ต้องการลบข้อมูลยอดขายของวันนี้ใช่หรือไม่?');
+      if (!ok) return;
+      state.salesRows = state.salesRows.filter(r => r.id !== rowId);
+      saveState();
+      renderSalesSheet();
+      showToast('ลบแถวเรียบร้อย', 'info');
+    }
+
+    function syncBoardOrdersToSalesSheet() {
+      const orders = getAllBoardOrders();
+      if (!orders.length) {
+        showToast('ยังไม่มีออเดอร์บนบอร์ดสำหรับซิงก์', 'warn');
+        return;
+      }
+
+      const groupedByDate = {};
+      orders.forEach(o => {
+        const d = (o.dueAt || new Date().toISOString()).slice(0, 10);
+        if (!groupedByDate[d]) {
+          groupedByDate[d] = { count: 0, total: 0, codes: [], adminSales: {} };
+        }
+        groupedByDate[d].count += 1;
+        groupedByDate[d].total += Number(o.price || 0);
+        groupedByDate[d].codes.push(o.orderCode);
+        if (o.adminId) {
+          groupedByDate[d].adminSales[o.adminId] = (groupedByDate[d].adminSales[o.adminId] || 0) + Number(o.price || 0);
+        }
+      });
+
+      Object.entries(groupedByDate).forEach(([dateStr, info]) => {
+        const existing = state.salesRows.find(r => r.date === dateStr);
+        if (existing) {
+          existing.orderCount = info.count;
+          existing.totalSales = info.total;
+          existing.orderCodes = info.codes.join(', ');
+          existing.adminSales = { ...(existing.adminSales || {}), ...info.adminSales };
+          existing.pumSales = info.adminSales['admin_pum'] || 0;
+          existing.kungkingSales = info.adminSales['admin_kungking'] || 0;
+        } else {
+          state.salesRows.push({
+            id: 'sr_sync_' + dateStr,
+            date: dateStr,
+            orderCount: info.count,
+            totalSales: info.total,
+            refundNote: '',
+            refundAmount: 0,
+            orderCodes: info.codes.join(', '),
+            adminSales: info.adminSales,
+            pumSales: info.adminSales['admin_pum'] || 0,
+            kungkingSales: info.adminSales['admin_kungking'] || 0
+          });
+        }
+      });
+
+      state.salesRows.sort((a, b) => a.date.localeCompare(b.date));
+      saveState();
+      renderSalesSheet();
+      showToast('ซิงก์ยอดขายจากบอร์ดลงตารางเรียบร้อย', 'info');
+    }
+
+    function exportSalesCSV() {
+      const admins = getAdminsList();
+      const headers = ['NO', 'Date', 'OrderCount', 'TotalSales', 'RefundNote', 'RefundAmount', 'OrderCodes', ...admins.map(a => `Sales_${a.name}`)];
+      const lines = [headers.join(',')];
+      state.salesRows.forEach((r, idx) => {
+        const adminCols = admins.map(a => getAdminSalesFromRow(r, a.id));
+        lines.push([
+          idx + 1,
+          r.date,
+          r.orderCount,
+          r.totalSales,
+          `"${String(r.refundNote || '').replace(/"/g, '""')}"`,
+          r.refundAmount || 0,
+          `"${String(r.orderCodes || '').replace(/"/g, '""')}"`,
+          ...adminCols
+        ].join(','));
+      });
+      const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sales_report_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast('ดาวน์โหลดไฟล์ CSV เรียบร้อย', 'info');
+    }
+
+    // VIEW 4: BACK OFFICE SETTINGS
+    function renderSettingsView() {
+      const container = document.getElementById('view-settings');
+      const canEdit = canCurrentAdminEditTheme();
+      const activeAdm = getAdminById(state.activeAdminId);
+      const t = state.theme;
+      const admins = getAdminsList();
+
+      container.innerHTML = `
+        <div class="glass-panel p-5 flex flex-wrap items-center justify-between gap-3 ${canEdit ? 'border-emerald-300/70' : 'border-amber-300/80 bg-amber-50/70'}">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">${canEdit ? '🔓' : '🔒'}</span>
+            <div>
+              <h3 class="font-bold text-sm">สถานะสิทธิ์ปัจจุบัน: ${escapeHtml(activeAdm.name)}</h3>
+              <p class="text-xs opacity-75">
+                ${canEdit
+                  ? 'คุณได้รับสิทธิ์ให้ปรับแต่งสี พื้นหลัง และฟอนต์ของระบบ Back Office ได้เต็มรูปแบบ'
+                  : 'บัญชีแอดมินนี้ไม่ได้เปิดสิทธิ์ให้เปลี่ยนธีมหรือฟอนต์ (สามารถสลับแอดมินหลักเพื่อตั้งค่าสิทธิ์ได้ที่มุมซ้ายบน)'}
+              </p>
+            </div>
+          </div>
+          <span class="px-3 py-1 rounded-full text-xs font-bold ${canEdit ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-200 text-amber-950'}">
+            ${canEdit ? 'มีสิทธิ์ปรับแต่งธีม' : 'จำกัดสิทธิ์การปรับแต่ง'}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 space-y-6 ${!canEdit ? 'opacity-55 pointer-events-none select-none' : ''}">
+            <div class="glass-panel p-5 sm:p-6 space-y-4">
+              <div>
+                <h4 class="font-bold text-base">1. ปรับแต่งพื้นหลัง (Background & Soft Mesh)</h4>
+                <p class="text-xs opacity-65">เลือกโทนพื้นหลังพาสเทลละมุนหรือวางลิงก์รูปภาพพื้นหลังได้เอง</p>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                ${BG_PRESETS.map(p => `
+                  <button type="button" onclick="selectBgPreset('${p.id}')"
+                    class="p-3 rounded-2xl border text-left transition ${t.bgPresetId === p.id && !t.customBgUrl ? 'ring-2 ring-stone-900 border-stone-900' : 'border-stone-800/10 hover:border-stone-800/30'}">
+                    <div class="h-12 rounded-xl mb-2 border border-black/5" style="background: ${p.canvas};"></div>
+                    <div class="text-xs font-bold truncate">${p.name}</div>
+                  </button>
+                `).join('')}
+              </div>
+              <div class="pt-2 flex flex-col sm:flex-row gap-2">
+                <input id="customBgUrlInput" type="url" value="${escapeHtml(t.customBgUrl || '')}" placeholder="หรือวาง URL รูปภาพพื้นหลัง (https://...)" class="flex-1 rounded-xl bg-white/90 border border-stone-800/15 px-3.5 py-2 text-xs" />
+                <button type="button" onclick="applyCustomBgUrl()" class="px-4 py-2 rounded-xl btn-accent text-xs font-semibold">ใช้รูปพื้นหลัง</button>
+              </div>
+            </div>
+
+            <div class="glass-panel p-5 sm:p-6 space-y-4">
+              <div>
+                <h4 class="font-bold text-base">2. ปรับโทนสีระบบ (Accent & Surface Colors)</h4>
+                <p class="text-xs opacity-65">กำหนดสีหลัก สีรอง และสีปุ่มกดให้ตรงกับสไตล์ร้านของคุณ</p>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <label class="p-3.5 rounded-2xl muted-surface flex items-center justify-between gap-2 cursor-pointer">
+                  <span class="font-semibold">สีหลัก (Primary)</span>
+                  <input type="color" value="${t.accentPrimary}" onchange="updateColorToken('accentPrimary', this.value)" class="w-9 h-9 rounded-lg border-0 bg-transparent cursor-pointer" />
+                </label>
+                <label class="p-3.5 rounded-2xl muted-surface flex items-center justify-between gap-2 cursor-pointer">
+                  <span class="font-semibold">สีรอง (Secondary)</span>
+                  <input type="color" value="${t.accentSecondary}" onchange="updateColorToken('accentSecondary', this.value)" class="w-9 h-9 rounded-lg border-0 bg-transparent cursor-pointer" />
+                </label>
+                <label class="p-3.5 rounded-2xl muted-surface flex items-center justify-between gap-2 cursor-pointer">
+                  <span class="font-semibold">สีปุ่ม/แถบเด่น</span>
+                  <input type="color" value="${t.accentDark}" onchange="updateColorToken('accentDark', this.value)" class="w-9 h-9 rounded-lg border-0 bg-transparent cursor-pointer" />
+                </label>
+              </div>
+            </div>
+
+            <div class="glass-panel p-5 sm:p-6 space-y-4">
+              <div>
+                <h4 class="font-bold text-base">3. แบบฟอนต์และขนาดตัวอักษร (Typography)</h4>
+                <p class="text-xs opacity-65">เลือกฟอนต์ภาษาไทยที่อ่านสบายตาและปรับขนาดตัวอักษรทั้งเว็บไซต์</p>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <label class="block font-semibold mb-1.5">เลือกแบบฟอนต์</label>
+                  <select onchange="updateTypography('fontFamily', this.value)" class="w-full rounded-xl bg-white/90 border border-stone-800/15 px-3.5 py-2.5 font-medium">
+                    <option value="'Prompt', 'Noto Sans Thai', sans-serif" ${t.fontFamily.includes('Prompt') ? 'selected' : ''}>Prompt (โมเดิร์น ละมุน อ่านง่าย)</option>
+                    <option value="'Noto Sans Thai', sans-serif" ${t.fontFamily.startsWith("'Noto Sans Thai'") ? 'selected' : ''}>Noto Sans Thai (สะอาดตา เป็นทางการ)</option>
+                    <option value="'Sarabun', sans-serif" ${t.fontFamily.includes('Sarabun') ? 'selected' : ''}>Sarabun (ฟอนต์เอกสาร ตัวเลขชัดเจน)</option>
+                    <option value="'Plus Jakarta Sans', 'Prompt', sans-serif" ${t.fontFamily.includes('Plus Jakarta') ? 'selected' : ''}>Plus Jakarta Sans + Prompt (สไตล์ Editorial)</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="flex items-center justify-between font-semibold mb-1.5">
+                    <span>ขนาดฟอนต์พื้นฐาน</span>
+                    <span id="fontSizeValueLabel" class="px-2 py-0.5 rounded-full bg-stone-800 text-white text-[11px]">${t.fontSize}px</span>
+                  </div>
+                  <input type="range" min="13" max="18" step="1" value="${t.fontSize}" oninput="updateTypography('fontSize', this.value)" class="w-full accent-rose-600 cursor-pointer mt-2" />
+                  <div class="flex justify-between text-[10px] opacity-55 mt-1">
+                    <span>เล็ก (13px)</span>
+                    <span>มาตรฐาน (15px)</span>
+                    <span>ใหญ่ (18px)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-panel p-5 sm:p-6 space-y-4 h-fit">
+            <div>
+              <h4 class="font-bold text-base">4. จัดการรายชื่อแอดมิน & สิทธิ์การปรับแต่ง</h4>
+              <p class="text-xs opacity-65">เพิ่ม/แก้ไข/ลบรายชื่อแอดมิน และกำหนดว่าคนไหนสามารถปรับธีม สี หรือฟอนต์ของเว็บได้</p>
+            </div>
+
+            <div class="p-3.5 rounded-2xl muted-surface space-y-2.5">
+              <div class="text-xs font-bold">+ เพิ่มแอดมินใหม่</div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div class="flex gap-1.5">
+                  <select id="newAdminAvatar" class="rounded-xl bg-white border border-stone-800/15 px-2 py-2 text-xs">
+                    <option value="🌸">🌸</option>
+                    <option value="🍑">🍑</option>
+                    <option value="👑">👑</option>
+                    <option value="✨">✨</option>
+                    <option value="🧸">🧸</option>
+                    <option value="🎀">🎀</option>
+                    <option value="🍀">🍀</option>
+                  </select>
+                  <input id="newAdminNameInput" type="text" placeholder="ชื่อแอดมิน (เช่น อุ้ม)" class="w-full rounded-xl bg-white border border-stone-800/15 px-3 py-2 text-xs" />
+                </div>
+                <input id="newAdminEmailInput" type="email" placeholder="อีเมล (เช่น aum@shop.com)" class="w-full rounded-xl bg-white border border-stone-800/15 px-3 py-2 text-xs" />
+              </div>
+              <div class="flex gap-2">
+                <input id="newAdminRoleInput" type="text" placeholder="ตำแหน่ง (เช่น Admin ออเดอร์)" class="flex-1 rounded-xl bg-white border border-stone-800/15 px-3 py-2 text-xs" />
+                <button type="button" onclick="addNewAdmin()" class="px-4 py-2 rounded-xl btn-accent text-xs font-semibold shrink-0">เพิ่มแอดมิน</button>
+              </div>
+            </div>
+
+            <div class="space-y-2.5 max-h-[420px] overflow-y-auto custom-scroll pr-0.5">
+              ${admins.map(adm => {
+                const checked = Boolean(t.adminPermissions && t.adminPermissions[adm.id]);
+                const avatarChoices = ['👑', '🌸', '🍑', '✨', '🧸', '🎀', '🍀'];
+                return `
+                  <div class="p-3.5 rounded-2xl bg-white/80 border border-stone-800/10 space-y-2.5">
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="flex items-center gap-2 flex-1 min-w-0">
+                        <select onchange="updateAdminField('${adm.id}', 'avatar', this.value)" class="rounded-xl bg-rose-50/70 border border-stone-800/10 px-1.5 py-1.5 text-sm">
+                          ${avatarChoices.map(icon => `<option value="${icon}" ${adm.avatar === icon ? 'selected' : ''}>${icon}</option>`).join('')}
+                        </select>
+                        <div class="flex-1 min-w-0 space-y-1">
+                          <input type="text" value="${escapeHtml(adm.name)}" onchange="updateAdminField('${adm.id}', 'name', this.value)" class="w-full rounded-lg bg-stone-50/90 hover:bg-white focus:bg-white border border-stone-800/10 px-2.5 py-1 text-xs font-bold" />
+                          <input type="email" value="${escapeHtml(adm.email || '')}" placeholder="ผูกอีเมลแอดมิน..." onchange="updateAdminField('${adm.id}', 'email', this.value)" class="w-full rounded-lg bg-rose-50/50 hover:bg-white focus:bg-white border border-rose-200/70 px-2.5 py-1 text-[11px] text-rose-900" />
+                          <input type="text" value="${escapeHtml(adm.role)}" onchange="updateAdminField('${adm.id}', 'role', this.value)" class="w-full rounded-lg bg-stone-50/70 hover:bg-white focus:bg-white border border-stone-800/10 px-2.5 py-1 text-[11px] text-stone-600" />
+                        </div>
+                      </div>
+                      <button type="button" onclick="deleteAdmin('${adm.id}')" title="ลบแอดมินคนนี้" class="p-1.5 rounded-xl hover:bg-rose-100 text-stone-400 hover:text-rose-700 text-xs transition shrink-0">
+                        🗑️
+                      </button>
+                    </div>
+                    <div class="pt-2 border-t border-stone-800/5 flex flex-wrap items-center justify-between gap-2">
+                      <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="sendAdminEmailInvite('${adm.id}')" class="px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200/80 transition">✉️ ส่งคำเชิญทางอีเมล</button>
+                        <button type="button" onclick="copyAdminInviteText('${adm.id}')" class="px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-stone-100 hover:bg-stone-200 text-stone-700 transition">📋 ก๊อปปี้คำเชิญ</button>
+                      </div>
+                      <label class="inline-flex items-center gap-2 text-xs font-semibold cursor-pointer">
+                        <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleAdminThemePermission('${adm.id}', this.checked)" class="rounded text-rose-600 focus:ring-rose-400">
+                        <span>อนุญาตปรับธีม</span>
+                      </label>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function buildAdminInvitePayload(adm) {
+      const inviter = getAdminById(state.activeAdminId);
+      const subject = `คำเชิญเข้าร่วมทีมแอดมิน BackOffice Studio (${adm.name})`;
+      const body = [
+        `สวัสดีคุณ ${adm.name},`,
+        ``,
+        `แอดมิน${inviter.name} ได้เพิ่มคุณเข้าสู่ระบบจัดการออเดอร์หลังบ้าน BackOffice Studio แล้ว`,
+        `- ชื่อแอดมินในระบบ: ${adm.name}`,
+        `- อีเมลที่ผูกไว้: ${adm.email || '-'}`,
+        `- ตำแหน่ง: ${adm.role}`,
+        `- ลิงก์เข้าใช้งาน: ${window.location.href}`,
+        ``,
+        `วิธีเข้าใช้งาน: เปิดลิงก์ด้านบน แล้วกรอกอีเมล "${adm.email || ''}" ในช่องผู้ใช้งานมุมซ้ายบนเพื่อเริ่มลงออเดอร์และบันทึกประวัติการทำงานของคุณได้เลยครับ`
+      ].join('\n');
+      return { subject, body };
+    }
+
+    function sendAdminEmailInvite(adminId) {
+      const adm = getAdminsList().find(a => a.id === adminId);
+      if (!adm) return;
+      if (!adm.email) {
+        showToast(`กรุณากรอกอีเมลของ "${adm.name}" ก่อนกดส่งคำเชิญ`, 'warn');
+        return;
+      }
+      const { subject, body } = buildAdminInvitePayload(adm);
+      const mailtoUrl = `mailto:${encodeURIComponent(adm.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.open(mailtoUrl, '_blank');
+      showToast(`เปิดหน้าต่างส่งอีเมลเชิญไปยัง ${adm.email} แล้ว`, 'info');
+    }
+
+    function copyAdminInviteText(adminId) {
+      const adm = getAdminsList().find(a => a.id === adminId);
+      if (!adm) return;
+      const { body } = buildAdminInvitePayload(adm);
+      const ta = document.createElement('textarea');
+      ta.value = body;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      showToast(`คัดลอกข้อความเชิญของ "${adm.name}" เรียบร้อย พร้อมวางส่งได้ทันที`, 'info');
+    }
+
+    function addNewAdmin() {
+      const nameInput = document.getElementById('newAdminNameInput');
+      const emailInput = document.getElementById('newAdminEmailInput');
+      const roleInput = document.getElementById('newAdminRoleInput');
+      const avatarSel = document.getElementById('newAdminAvatar');
+      const name = (nameInput?.value || '').trim();
+      const email = (emailInput?.value || '').trim().toLowerCase();
+      const role = (roleInput?.value || '').trim() || 'Admin ออเดอร์';
+      const avatar = avatarSel?.value || '🌸';
+
+      if (!name) {
+        showToast('กรุณากรอกชื่อแอดมินก่อนกดเพิ่ม', 'warn');
+        return;
+      }
+
+      if (email && getAdminsList().some(a => (a.email || '').trim().toLowerCase() === email)) {
+        showToast(`อีเมล "${email}" ถูกผูกกับแอดมินคนอื่นแล้ว`, 'warn');
+        return;
+      }
+
+      const newId = 'admin_' + Date.now();
+      state.admins = getAdminsList();
+      state.admins.push({ id: newId, name, email, role, avatar });
+      state.theme.adminPermissions = state.theme.adminPermissions || {};
+      state.theme.adminPermissions[newId] = false;
+
+      nameInput.value = '';
+      if (emailInput) emailInput.value = '';
+      roleInput.value = '';
+      saveState();
+      renderAdminSelectors();
+      renderSettingsView();
+      if (email) {
+        sendAdminEmailInvite(newId);
+      } else {
+        showToast(`เพิ่มแอดมิน "${name}" เรียบร้อย`, 'info');
+      }
+    }
+
+    function updateAdminField(adminId, field, value) {
+      const adm = getAdminsList().find(a => a.id === adminId);
+      if (!adm) return;
+      const trimmed = String(value || '').trim();
+      if ((field === 'name' || field === 'role') && !trimmed) {
+        renderSettingsView();
+        return;
+      }
+      if (field === 'email' && trimmed) {
+        const lower = trimmed.toLowerCase();
+        const dup = getAdminsList().some(a => a.id !== adminId && (a.email || '').trim().toLowerCase() === lower);
+        if (dup) {
+          showToast(`อีเมล "${lower}" ซ้ำกับแอดมินคนอื่นในระบบ`, 'warn');
+          renderSettingsView();
+          return;
+        }
+        adm.email = lower;
+      } else {
+        adm[field] = trimmed || value;
+      }
+      saveState();
+      renderAdminSelectors();
+      renderSettingsView();
+      showToast('อัปเดตข้อมูลแอดมินเรียบร้อย', 'info');
+    }
+
+    async function deleteAdmin(adminId) {
+      const admins = getAdminsList();
+      if (admins.length <= 1) {
+        showToast('ต้องมีรายชื่อแอดมินอย่างน้อย 1 คน', 'warn');
+        return;
+      }
+      const target = admins.find(a => a.id === adminId);
+      if (!target) return;
+
+      const ok = await openConfirmModal(
+        'ยืนยันการลบแอดมิน',
+        `ต้องการลบรายชื่อแอดมิน "${target.name}" ใช่หรือไม่?`
+      );
+      if (!ok) return;
+
+      state.admins = admins.filter(a => a.id !== adminId);
+      if (state.theme.adminPermissions) {
+        delete state.theme.adminPermissions[adminId];
+      }
+      if (state.activeAdminId === adminId) {
+        state.activeAdminId = state.admins[0].id;
+      }
+
+      saveState();
+      renderAdminSelectors();
+      renderSettingsView();
+      showToast(`ลบแอดมิน "${target.name}" เรียบร้อย`, 'info');
+    }
+
+    function selectBgPreset(presetId) {
+      if (!canCurrentAdminEditTheme()) return;
+      state.theme.bgPresetId = presetId;
+      state.theme.customBgUrl = '';
+      saveState();
+      applyThemeToDOM();
+      renderSettingsView();
+    }
+
+    function applyCustomBgUrl() {
+      if (!canCurrentAdminEditTheme()) return;
+      const url = document.getElementById('customBgUrlInput').value.trim();
+      state.theme.customBgUrl = url;
+      saveState();
+      applyThemeToDOM();
+      renderSettingsView();
+      showToast('อัปเดตพื้นหลังเรียบร้อย', 'info');
+    }
+
+    function updateColorToken(key, val) {
+      if (!canCurrentAdminEditTheme()) return;
+      state.theme[key] = val;
+      saveState();
+      applyThemeToDOM();
+    }
+
+    function updateTypography(key, val) {
+      if (!canCurrentAdminEditTheme()) return;
+      state.theme[key] = key === 'fontSize' ? Number(val) : val;
+      saveState();
+      applyThemeToDOM();
+      if (key === 'fontSize') {
+        document.getElementById('fontSizeValueLabel').textContent = `${val}px`;
+      }
+    }
+
+    function toggleAdminThemePermission(adminId, allowed) {
+      state.theme.adminPermissions = state.theme.adminPermissions || {};
+      state.theme.adminPermissions[adminId] = allowed;
+      saveState();
+      updateActiveAdminBadge();
+      renderSettingsView();
+      showToast(`อัปเดตสิทธิ์ของ ${getAdminById(adminId).name} แล้ว`, 'info');
+    }
+
+    // Notifications & Web Audio Beep
+    function toggleSoundAlert() {
+      state.soundEnabled = !state.soundEnabled;
+      saveState();
+      updateSoundButtonUI();
+      if (state.soundEnabled) playAlertTone();
+    }
+
+    function updateSoundButtonUI() {
+      document.getElementById('soundIcon').textContent = state.soundEnabled ? '🔊' : '🔇';
+      document.getElementById('soundLabel').textContent = state.soundEnabled ? 'เสียงแจ้งเตือน: เปิด' : 'เสียงแจ้งเตือน: ปิด';
+    }
+
+    function playAlertTone() {
+      if (!state.soundEnabled) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(660, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.16);
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.26);
+      } catch (e) {
+        // Ignore audio autoplay restriction errors
+      }
+    }
+
+    function toggleNotificationDrawer() {
+      const drawer = document.getElementById('notificationDrawer');
+      drawer.classList.toggle('hidden');
+    }
+
+    function runReminderCheck(manualTrigger = false) {
+      const orders = getAllBoardOrders().filter(o => !o.isClosed && isCardDueSoon(o));
+      document.getElementById('dueAlertBadge').textContent = orders.length;
+      document.getElementById('headerBellCount').textContent = orders.length;
+
+      const listEl = document.getElementById('notificationList');
+      if (!orders.length) {
+        listEl.innerHTML = `<div class="py-6 text-center text-stone-400">ยังไม่มีออเดอร์ที่ใกล้ถึงเวลาแจ้งเตือน</div>`;
+        if (manualTrigger) showToast('ตรวจสอบแล้ว: ยังไม่มีออเดอร์เร่งด่วนในขณะนี้', 'info');
+        return;
+      }
+
+      listEl.innerHTML = orders.map(o => `
+        <div onclick="toggleNotificationDrawer(); navigateTo('board'); openCardModal('${o.id}', '${o.listId}');" class="p-2.5 rounded-xl bg-rose-50/90 hover:bg-rose-100/80 border border-rose-200 cursor-pointer transition">
+          <div class="flex items-center justify-between font-bold text-rose-900">
+            <span>${escapeHtml(o.orderCode)} · ${escapeHtml(o.customer)}</span>
+            <span>${formatCurrency(o.price)}</span>
+          </div>
+          <div class="text-[11px] text-stone-600 mt-0.5">
+            กำหนดส่ง: ${formatThaiDateTime(o.dueAt)} (เตือนล่วงหน้า ${o.reminderValue} ${o.reminderUnit === 'days' ? 'วัน' : 'ชม.'})
+          </div>
+        </div>
+      `).join('');
+
+      let newlyAlerted = false;
+      orders.forEach(o => {
+        const key = `${o.id}_${o.dueAt}`;
+        if (!state.triggeredReminders[key] || manualTrigger) {
+          state.triggeredReminders[key] = true;
+          newlyAlerted = true;
+          showToast(`⏰ ใกล้ถึงกำหนด: ${o.orderCode} (${o.customer}) เวลา ${formatThaiDateTime(o.dueAt)}`, 'alert');
+        }
+      });
+
+      if (newlyAlerted) {
+        saveState();
+        playAlertTone();
+      }
+    }
+
+    // Toast & Custom Confirm Utilities
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      const styleMap = {
+        info: 'bg-stone-900/95 text-white border-stone-700',
+        warn: 'bg-amber-900/95 text-amber-50 border-amber-700',
+        alert: 'bg-rose-600/95 text-white border-rose-400'
+      };
+      el.className = `pointer-events-auto px-4 py-3 rounded-2xl border shadow-lg text-xs font-medium leading-relaxed transition-all duration-300 ${styleMap[type] || styleMap.info}`;
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(-6px)';
+        setTimeout(() => el.remove(), 280);
+      }, 4200);
+    }
+
+    function openConfirmModal(title, message) {
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMessage').textContent = message;
+      document.getElementById('confirmModal').classList.remove('hidden');
+      return new Promise(resolve => {
+        confirmResolver = resolve;
+      });
+    }
+
+    function closeConfirmModal(result) {
+      document.getElementById('confirmModal').classList.add('hidden');
+      if (confirmResolver) {
+        confirmResolver(result);
+        confirmResolver = null;
+      }
+    }
+
+    async function resetDemoData() {
+      const ok = await openConfirmModal('ล้างข้อมูลเป็นบอร์ดเปล่า', 'ต้องการล้างการ์ดออเดอร์และตารางยอดขายทั้งหมด เพื่อเริ่มต้นใช้งานจริงแบบบอร์ดเปล่าใช่หรือไม่?');
+      if (!ok) return;
+      localStorage.removeItem(STORAGE_KEY);
+      state = { ...createDefaultState(), archivedCards: [], editingLocks: {} };
+      saveState();
+      applyThemeToDOM();
+      renderAdminSelectors();
+      navigateTo(state.activeRoute);
+      runReminderCheck(false);
+      showToast('รีเซ็ตเป็นบอร์ดเปล่าเรียบร้อย พร้อมเริ่มกรอกออเดอร์จริง', 'info');
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Global Listeners & App Bootstrap
+    document.addEventListener('click', () => {
+      if (openMenuListId) {
+        openMenuListId = null;
+        if (state.activeRoute === 'board') renderBoard();
+      }
+    });
+
+    document.getElementById('pasteDropZone')?.addEventListener('paste', (e) => {
+      const items = e.clipboardData?.items || [];
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (!file) continue;
+          const reader = new FileReader();
+          reader.onload = () => {
+            pendingCardImage = reader.result;
+            syncCardImagePreview();
+            showToast('วางรูปภาพจากคลิปบอร์ดแล้ว', 'info');
+          };
+          reader.readAsDataURL(file);
+          break;
+        }
+      }
+    });
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        state = loadState();
+        applyThemeToDOM();
+        renderAdminSelectors();
+        navigateTo(state.activeRoute);
+      }
+    });
+
+    function initApp() {
+      applyThemeToDOM();
+      renderAdminSelectors();
+      updateSoundButtonUI();
+      navigateTo(state.activeRoute || 'board');
+      runReminderCheck(false);
+      setInterval(() => runReminderCheck(false), 30000);
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
